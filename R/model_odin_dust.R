@@ -4,8 +4,14 @@
 
 #### Todo:
 #### - Add movement between age groups
+## Could do: S[, 1] <- S[, 1] - n_SS[, 1] * (1 - cov1) - nSV1[,1] * cov1 + new
+##           S[, 2:N_age] <- S[, j] + n_SS[, j-1] * (1 - cov1) + nSV1[,1] * cov1
+##           V1[, 2:N_age] <- V1[, j] +  nSV1[,1] * cov1 - nV1V2 * cov2 - nV1V1 * (1 - cov2) 
+##           V2[, 2:N_age] <- S[, j] + nV1V2 * cov2 - nV2V2[,j-1]
+##           R[, 2:N_age] <- R[, j] + nRR[, j-1]
 #### - Add changes in the distribution of vaccine status through time
 #### - Draw the number of importations in this script (currently defined by the user)
+#### - Add maternal protection for the first age group?
 
 #### Structure of the script:
 #### 1- Core equations
@@ -15,7 +21,7 @@
 #### 5- Compute the number of importations
 #### 6- Define initial status / dimension of the compartment matrices
 
-### 1- Core equations for transitions between compartments:
+#### 1- Core equations for transitions between compartments: ####
 ### All compartments are stratified by age (ROWS) and regions (COLUMNS)
 ## Susceptibles compartments: 
 # New value of S, V1, and V2 is: 
@@ -44,7 +50,8 @@ update(Iv2[,]) <- Iv2[i, j] + n_Ev12v2[i, j] - n_Iv2R[i, j]
 update(R[,]) <- R[i, j] + n_IsR[i, j] + n_Iv1R[i, j] + n_Iv2R[i, j]
 
 
-### 2- Compute "n_" variables: the number of individuals changing between compartments
+
+#### 2- Compute "n_" variables: the number of individuals changing between compartments ####
 ## Draw from binomial distributions: 
 # Depends on the number of individuals in the compartment and the probability of moving
 n_SEs[,] <- rbinom(S[i, j], p_SE[i, j])
@@ -61,7 +68,7 @@ n_Iv2R[,] <- rbinom(Iv2[i, j], p_IR)
 
 
 
-### 3- Compute the probabilities of transition between each compartment:
+#### 3- Compute the probabilities of transition between each compartment: ####
 ## From S to E depends on lambda_t, the force of infection (per age / region / date)
 p_SE[,] <- 1 - exp(-lambda_t[i, j] * dt) # S to E
 ## From v1 and v2 to E also depends on lambda, and v1/v2, the protection from infection 
@@ -83,7 +90,7 @@ v2 <- user(.1)
 
 
 
-### 4- Compute lambda_t, the force of infection including the impact of seasonnality
+#### 4- Compute lambda_t, the force of infection including the impact of seasonnality ####
 lambda_t[,] <- lambda[i,j] * 
   exp(X * cos(2 * 3.14 * time / 365) + Y * sin(2 * 3.14 * time / 365))
 # Default values of X and Y (seasonnality parameters)
@@ -140,7 +147,7 @@ vacc2 <- user(.1)
 
 
 
-#### 5- Compute the number of importations
+##### 5- Compute the number of importations ####
 ### Extract the number of importation per age / region at time (step + 1)
 import_t[,] <- import[i, j, step + 1]
 
@@ -157,7 +164,7 @@ N_time <- user(2)
 
 
 
-## 6- Initial conditions
+#### 6- Initial conditions ####
 initial(S[,]) <- S_ini[i, j]
 initial(V1[,]) <- V1_ini[i, j]
 initial(V2[,]) <- V2_ini[i, j]
