@@ -49,21 +49,29 @@ N <- matrix(c(2e3, 8e3, 1e4, 5e3,
               1.5e4, 3.5e4, 5e4, 
               2e4, 5e4, 1e5, 1.5e5, 7e4), ncol = 4, byrow = T)
 
-## Number of inhabitants in each compartment
+## Define vaccine uptake and proportion of recovered
 # In the first age group, everyone is susceptible
 # In the third age group, most people are vaccinated twice
 # Low vaccine uptake in region 3 (1/3 of susceptibles)
-S <- matrix(c(2e3, 8e3, 1e4, 5e3, 
-              1.5e4 / 3, 3.5e4 / 4, 5e4 / 2, 2e4 / 8, 
-              5e4 / 10, 1e5 / 20, 1.5e5 / 3, 7e4 / 100), ncol = 4, byrow = T)
-V1 <- matrix(c(0, 0, 0, 0,
-               1.5e4 / 6, 3.5e4 / 8, 5e4 / 8, 2e4 / 4, 
-               5e4 / 20, 1e5 / 20, 1.5e5 / 20, 7e4 / 20), ncol = 4, byrow = T)
-V2 <- matrix(c(0, 0, 0, 0, 
-               1.5e4 / 8, 3.5e4 / 10, 5e4 / 10, 2e4 / 10, 
-                3 * 5e4 / 4, 8 * 1e5 / 10, 1.5e5 / 2, 9 * 7e4 / 10), ncol = 4, byrow = T)
+unvax <- matrix(c(1, 1, 1, 1, 
+                  1/3, 1/4, 1/2, 1/8,
+                  1/10, 1/20, 1/3, 1/100), ncol = 4, byrow = T)
 
-R <- N - S - V1 - V2
+cov1 <- matrix(c(0, 0, 0, 0,
+                 1/6, 1/8, 1/8, 1/4,
+                 1/20, 1/20, 1/20, 1/20), ncol = 4, byrow = T)
+
+cov2 <- matrix(c(0, 0, 0, 0,
+                 1/8, 1/10, 1/10, 1/10,
+                 3/4, 8 / 10, 1/2, 9/10), ncol = 4, byrow = T)
+
+recov <- 1 - unvax - cov1 - cov2
+
+## Number of inhabitants in each compartment
+S <- round(N * unvax, 0)
+V1 <- round(N * cov1, 0)
+V2 <- round(N * cov2, 0)
+R <- round(N * recov, 0)
 if(any(R < 0)) stop()
 
 ## Define the seasonality parameters
