@@ -3,13 +3,7 @@
 #### Include outside importations
 
 #### Todo:
-#### - Add movement between age groups
-## Could do: S[, 1] <- S[, 1] - n_SS[, 1] * (1 - cov1) - nSV1[,1] * cov1 + new
-##           S[, 2:N_age] <- S[, j] + n_SS[, j-1] * (1 - cov1) + nSV1[,1] * cov1
-##           V1[, 2:N_age] <- V1[, j] +  nSV1[,1] * cov1 - nV1V2 * cov2 - nV1V1 * (1 - cov2) 
-##           V2[, 2:N_age] <- S[, j] + nV1V2 * cov2 - nV2V2[,j-1]
-##           R[, 2:N_age] <- R[, j] + nRR[, j-1]
-#### - Add changes in the distribution of vaccine status through time
+#### - Add number of deaths?
 #### - Draw the number of importations in this script (currently defined by the user)
 #### - Add maternal protection for the first age group?
 
@@ -19,25 +13,45 @@
 #### 3- Compute the probability of movement between compartments
 #### 4- compute the force of infection
 #### 5- Compute the number of importations
-#### 6- Define initial status / dimension of the compartment matrices
+#### 6- Compute ageing
+#### 7- Define initial status / dimension of the compartment matrices
 
 #### 1- Core equations for transitions between compartments: ####
+
 ### All compartments are stratified by age (ROWS) and regions (COLUMNS)
 ## Susceptibles compartments: 
 # New value of S, V1, and V2 is: 
 #   (old value) - (nb of susceptible individuals who were exposed)
-update(S[,]) <- S[i, j] - n_SEs[i, j]
-update(V1[,]) <- V1[i, j] - n_v1E[i, j]
-update(V2[,]) <- V2[i, j] - n_v2E[i, j]
+# First age groups: Add births
+update(S[1, ]) <- S[1, j] + new_birth[j] - n_S[1, j] - n_SEs[1, j]
+update(V1[1,]) <- V1[1, j] - n_v1E[1, j] - n_V1[1, j]
+update(V2[1,]) <- V2[1, j] - n_v2E[1, j] - n_V2V2[1, j]
 
-## Exposed compartments: 
+# Following age groups
+update(S[2 : len_ageing,]) <- S[i, j] - n_SEs[i, j] + 
+  n_SS[i - 1, j] - n_S[i, j]
+update(V1[2 : len_ageing,]) <- V1[i, j] - n_v1E[i, j] + 
+  n_V1V1[i - 1, j] + n_SV1[i - 1, j] - n_V1[i, j]
+update(V2[2 : len_ageing,]) <- V2[i, j] - n_v2E[i, j] + 
+  n_V2V2[i - 1, j] + n_V1V2[i - 1, j] - n_V2V2[i, j]
+
+# Last age groups: Add ageing population, remove deaths? (or could put everyone in R?)
+update(S[N_age,]) <- S[N_age, j] - n_SEs[N_age, j] + 
+  n_SS[len_ageing, j]
+update(V1[N_age,]) <- V1[N_age, j] - n_v1E[N_age, j] + 
+  n_V1V1[len_ageing, j] + n_SV1[len_ageing, j]
+update(V2[N_age,]) <- V2[N_age, j] - n_v2E[N_age, j] + 
+  n_V2V2[len_ageing, j] + n_V1V2[len_ageing, j]
+
+
+## Exposed compartments: No Aging
 # New value of ES, EV1, and EV2 is: 
 #   (old value) + (new_exposed) - (nb of exposed individuals moving to infectious)
 update(Es[,]) <-  Es[i, j] + n_SEs[i, j] - n_EsIs[i, j]
 update(Ev1[,]) <- Ev1[i, j] + n_v1E[i, j] - n_Ev1Iv1[i, j]
 update(Ev2[,]) <- Ev2[i, j] + n_v2E[i, j] - n_Ev12v2[i, j]
 
-## Infected compartments: 
+## Infected compartments: No Aging
 # New value of IS is:
 #   (old value) + (new_exposed) + (new_imports) - (nb of infectious moving to recovered)
 # import_t corresponds to the number of new imports in this region / age group
@@ -46,10 +60,35 @@ update(Is[,]) <- Is[i, j] + n_EsIs[i, j] - n_IsR[i, j] + import_t[i,j]
 update(Iv1[,]) <- Iv1[i, j] + n_Ev1Iv1[i, j] - n_Iv1R[i, j]
 update(Iv2[,]) <- Iv2[i, j] + n_Ev12v2[i, j] - n_Iv2R[i, j]
 
-## Recovered compartment: 
-update(R[,]) <- R[i, j] + n_IsR[i, j] + n_Iv1R[i, j] + n_Iv2R[i, j]
+## Recovered compartments: similar to Susceptible compartments
+# First age group:
+update(R[1, ]) <- R[1, j] + n_IsR[1, j] - 
+  n_R[1, j]
+update(RV1[1, ]) <- RV1[1, j] + n_Iv1R[1, j] - 
+  n_RV1[1, j]
+update(RV2[1, ]) <- RV2[1, j] + n_Iv2R[1, j] - 
+  n_RV2RV2[1, j]
 
+# Following age groups:
+update(R[2 : len_ageing,]) <- R[i, j] + n_IsR[i, j] + 
+  n_RR[i - 1, j] - n_R[i, j]
+update(RV1[2 : len_ageing,]) <- RV1[i, j] + n_Iv1R[i, j] + 
+  n_RV1RV1[i - 1, j] + n_RRV1[i - 1, j] - n_RV1[i, j]
+update(RV2[2 : len_ageing,]) <- RV2[i, j] + n_Iv2R[i, j] + 
+  n_RV2RV2[i - 1, j] + n_RV1RV2[i - 1, j] - n_RV2RV2[i, j]
 
+# Last age group:
+update(R[N_age,]) <- R[N_age, j] + n_IsR[N_age, j] +
+  n_RR[len_ageing, j]
+update(RV1[N_age,]) <- RV1[N_age, j] + n_Iv1R[N_age, j] +
+  n_RV1RV1[len_ageing, j] + n_RRV1[len_ageing, j]
+update(RV2[N_age,]) <- RV2[N_age, j] + n_Iv2R[N_age, j] +
+  n_RV2RV2[len_ageing, j] + n_RV1RV2[len_ageing, j]
+
+## Track number of new infections
+update(new_IS[, ]) <- n_EsIs[i, j]
+update(new_IV1[, ]) <- n_Ev1Iv1[i, j]
+update(new_IV2[, ]) <- n_Ev12v2[i, j]
 
 #### 2- Compute "n_" variables: the number of individuals changing between compartments ####
 ## Draw from binomial distributions: 
@@ -91,6 +130,7 @@ v2 <- user(.1)
 
 
 #### 4- Compute lambda_t, the force of infection including the impact of seasonnality ####
+
 lambda_t[,] <- lambda[i,j] * 
   exp(X * cos(2 * 3.14 * time / 365) + Y * sin(2 * 3.14 * time / 365))
 # Default values of X and Y (seasonnality parameters)
@@ -147,7 +187,8 @@ vacc2 <- user(.1)
 
 
 
-##### 5- Compute the number of importations ####
+#### 5- Compute the number of importations ####
+
 ### Extract the number of importation per age / region at time (step + 1)
 import_t[,] <- import[i, j, step + 1]
 
@@ -163,8 +204,57 @@ dim(import_t) <- c(N_age, N_reg)
 N_time <- user(2)
 
 
+#### 6- Compute ageing ####
 
-#### 6- Initial conditions ####
+## Draw number of new susceptibles
+new_birth[] <- rpois(array_new[i, step])
+array_new[,] <- user()
+dim(array_new) <- c(N_reg, N_time)
+dim(new_birth) <- c(N_reg)
+
+mean_S[,] <- if(step %% 365 == 1) S[i, j] / 365 else mean_S[i,j]
+mean_V1[,] <- if(step %% 365 == 1) V1[i, j] / 365 else mean_V1[i,j]
+mean_V2[,] <- if(step %% 365 == 1) V2[i, j] / 365 else mean_V2[i,j]
+mean_R[,] <- if(step %% 365 == 1) R[i, j] / 365 else mean_R[i,j]
+mean_RV1[,] <- if(step %% 365 == 1) RV1[i, j] / 365 else mean_RV1[i,j]
+mean_RV2[,] <- if(step %% 365 == 1) RV2[i, j] / 365 else mean_RV2[i,j]
+
+
+## Compute overall number of movements between compartments
+n_S[,] <- rpois(mean_S[i, j])
+n_V1[,] <- rpois(mean_V1[i, j])
+n_V2V2[,] <- rpois(mean_V2[i, j])
+n_R[,] <- rpois(mean_R[i, j])
+n_RV1[,] <- rpois(mean_RV1[i, j])
+n_RV2RV2[,] <- rpois(mean_RV2[i, j])
+len_ageing <- N_age - 1
+
+## Number of ageing movements between specific compartments
+# In susceptible compartments
+n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], array_cov1[i, j, step])
+n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
+
+# n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, step])
+prop_v1v2[1:len_ageing,] <- if(step == 1 || i == 1) 0 else
+  (array_cov2[i, j, step] - array_cov2[i - 1, j, step - 1]) / array_cov1[i - 1, j, step - 1]
+dim(prop_v1v2) <- c(len_ageing, N_reg)
+n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], prop_v1v2[i, j])
+n_V1V1[1 : len_ageing,] <- n_V1[i, j] - n_V1V2[i, j]
+
+array_cov1[,,] <- user()
+dim(array_cov1) <- c(len_ageing, N_reg, N_time)
+array_cov2[,,] <- user()
+dim(array_cov2) <- c(len_ageing, N_reg, N_time)
+
+
+# In Recovered compartments
+n_RRV1[,] <- rbinom(n_R[i, j], array_cov1[i, j, step])
+n_RR[,] <- n_R[i, j] - n_RRV1[i, j]
+n_RV1RV2[,] <- rbinom(n_RV1[i, j], array_cov2[i, j, step])
+n_RV1RV1[,] <- n_RV1[i, j] - n_RV1RV2[i, j]
+
+#### 7- Initial conditions ####
+
 initial(S[,]) <- S_ini[i, j]
 initial(V1[,]) <- V1_ini[i, j]
 initial(V2[,]) <- V2_ini[i, j]
@@ -175,6 +265,12 @@ initial(Is[,]) <- Is_init[i, j]
 initial(Iv1[,]) <- Iv1_init[i, j]
 initial(Iv2[,]) <- Iv2_init[i, j]
 initial(R[,]) <- R_init[i, j]
+initial(RV1[,]) <- RV1_init[i, j]
+initial(RV2[,]) <- RV2_init[i, j]
+initial(new_IS[, ]) <- 0
+initial(new_IV1[, ]) <- 0
+initial(new_IV2[, ]) <- 0
+
 ## Default values
 S_ini[,] <- user(100)
 V1_ini[,] <- user(100)
@@ -186,6 +282,8 @@ Is_init[,] <- user(1)
 Iv1_init[,] <- user(0)
 Iv2_init[,] <- user(0)
 R_init[,] <- user(0)
+RV1_init[,] <- user(0)
+RV2_init[,] <- user(0)
 
 ### Dimensions of each compartment
 dim(S) <- c(N_age, N_reg)
@@ -198,6 +296,11 @@ dim(Is) <- c(N_age, N_reg)
 dim(Iv1) <- c(N_age, N_reg)
 dim(Iv2) <- c(N_age, N_reg)
 dim(R) <- c(N_age, N_reg)
+dim(RV1) <- c(N_age, N_reg)
+dim(RV2) <- c(N_age, N_reg)
+dim(new_IS) <- c(N_age, N_reg)
+dim(new_IV1) <- c(N_age, N_reg)
+dim(new_IV2) <- c(N_age, N_reg)
 
 ### Initialise the dimensions of the compartments' initial value
 dim(S_ini) <- c(N_age, N_reg)
@@ -210,6 +313,8 @@ dim(Is_init) <- c(N_age, N_reg)
 dim(Iv1_init) <- c(N_age, N_reg)
 dim(Iv2_init) <- c(N_age, N_reg)
 dim(R_init) <- c(N_age, N_reg)
+dim(RV1_init) <- c(N_age, N_reg)
+dim(RV2_init) <- c(N_age, N_reg)
 
 
 ### Initialise the dimensions of the number of individual moving between the compartments
@@ -225,3 +330,24 @@ dim(n_Iv2R) <- c(N_age, N_reg)
 dim(p_SE) <- c(N_age, N_reg)
 dim(p_SEv1) <- c(N_age, N_reg)
 dim(p_SEv2) <- c(N_age, N_reg)
+
+dim(n_SS) <- c(len_ageing, N_reg)
+dim(n_SV1) <- c(len_ageing, N_reg)
+dim(n_V1V1) <- c(len_ageing, N_reg)
+dim(n_V1V2) <- c(len_ageing, N_reg)
+dim(n_V2V2) <- c(len_ageing, N_reg)
+dim(n_RR) <- c(len_ageing, N_reg)
+dim(n_RRV1) <- c(len_ageing, N_reg)
+dim(n_RV1RV2) <- c(len_ageing, N_reg)
+dim(n_RV1RV1) <- c(len_ageing, N_reg)
+dim(n_RV2RV2) <- c(len_ageing, N_reg)
+dim(n_S) <- c(len_ageing, N_reg)
+dim(n_V1) <- c(len_ageing, N_reg)
+dim(n_R) <- c(len_ageing, N_reg)
+dim(n_RV1) <- c(len_ageing, N_reg)
+dim(mean_S) <- c(len_ageing, N_reg)
+dim(mean_V1) <- c(len_ageing, N_reg)
+dim(mean_V2) <- c(len_ageing, N_reg)
+dim(mean_R) <- c(len_ageing, N_reg)
+dim(mean_RV1) <- c(len_ageing, N_reg)
+dim(mean_RV2) <- c(len_ageing, N_reg)
