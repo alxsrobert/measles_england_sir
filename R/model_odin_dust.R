@@ -21,69 +21,112 @@
 ### All compartments are stratified by age (ROWS) and regions (COLUMNS)
 ## Susceptibles compartments: 
 # New value of S, V1, and V2 is: 
-#   (old value) - (nb of susceptible individuals who were exposed)
+#   (old value) -
+#   (nb of individuals from the compartment who aged) +
+#   (nb of individuals who aged into the compartment) - 
+#   (nb of susceptible individuals who were exposed)
+
 # First age groups: Add births
-update(S[1, ]) <- S[1, j] + new_birth[j] - n_S[1, j] - n_SEs[1, j]
-update(V1[1,]) <- V1[1, j] - n_v1E[1, j] - n_V1[1, j]
-update(V2[1,]) <- V2[1, j] - n_v2E[1, j] - n_V2V2[1, j]
+update(S[1, ]) <- S[1, j] +  # Initial
+  new_birth[j] - n_S[1, j] - # Birth + ageing out
+  n_SEs[1, j]                # Infected
+update(V1[1,]) <- V1[1, j] - # Initial
+  n_V1[1, j] -               # Ageing out
+  n_v1E[1, j]                # Infected
+update(V2[1,]) <- V2[1, j] - # Initial
+  n_V2V2[1, j] -             # Ageing out
+  n_v2E[1, j]                # Infected
 
 # Following age groups
-update(S[2 : len_ageing,]) <- S[i, j] - n_SEs[i, j] + 
-  n_SS[i - 1, j] - n_S[i, j]
-update(V1[2 : len_ageing,]) <- V1[i, j] - n_v1E[i, j] + 
-  n_V1V1[i - 1, j] + n_SV1[i - 1, j] - n_V1[i, j]
-update(V2[2 : len_ageing,]) <- V2[i, j] - n_v2E[i, j] + 
-  n_V2V2[i - 1, j] + n_V1V2[i - 1, j] - n_V2V2[i, j]
+update(S[2 : len_ageing,]) <- S[i, j] +   # Initial
+  n_SS[i - 1, j] -                        # Ageing in
+  n_S[i, j] -                             # Ageing out
+  n_SEs[i, j]                             # Infected
+update(V1[2 : len_ageing,]) <- V1[i, j] + # Initial
+  n_V1V1[i - 1, j] + n_SV1[i - 1, j] -    # Ageing in
+  n_V1[i, j] -                            # Ageing out
+  n_v1E[i, j]                             # Infected
+update(V2[2 : len_ageing,]) <- V2[i, j] + # Initial
+  n_V2V2[i - 1, j] + n_V1V2[i - 1, j] -   # Ageing in
+  n_v2E[i, j] -                           # Ageing out
+  n_V2V2[i, j]                            # Infected
 
 # Last age groups: Add ageing population, remove deaths? (or could put everyone in R?)
-update(S[N_age,]) <- S[N_age, j] - n_SEs[N_age, j] + 
-  n_SS[len_ageing, j]
-update(V1[N_age,]) <- V1[N_age, j] - n_v1E[N_age, j] + 
-  n_V1V1[len_ageing, j] + n_SV1[len_ageing, j]
-update(V2[N_age,]) <- V2[N_age, j] - n_v2E[N_age, j] + 
-  n_V2V2[len_ageing, j] + n_V1V2[len_ageing, j]
+update(S[N_age,]) <- S[N_age, j] +                # Initial
+  n_SS[len_ageing, j] -                           # Ageing in
+  n_SEs[N_age, j]                                 # Infected
+update(V1[N_age,]) <- V1[N_age, j] +              # Initial
+  n_V1V1[len_ageing, j] + n_SV1[len_ageing, j] -  # Ageing in
+  n_v1E[N_age, j]                                 # Infected
+update(V2[N_age,]) <- V2[N_age, j] +              # Initial
+  n_V2V2[len_ageing, j] + n_V1V2[len_ageing, j] - # Ageing in
+  n_v2E[N_age, j]                                 # Infected
 
 
 ## Exposed compartments: No Aging
 # New value of ES, EV1, and EV2 is: 
 #   (old value) + (new_exposed) - (nb of exposed individuals moving to infectious)
-update(Es[,]) <-  Es[i, j] + n_SEs[i, j] - n_EsIs[i, j]
-update(Ev1[,]) <- Ev1[i, j] + n_v1E[i, j] - n_Ev1Iv1[i, j]
-update(Ev2[,]) <- Ev2[i, j] + n_v2E[i, j] - n_Ev12v2[i, j]
+update(Es[,]) <-  Es[i, j] +   # Initial
+  n_SEs[i, j] -                # New exposed
+  n_EsIs[i, j]                 # Moving to infected
+update(Ev1[,]) <- Ev1[i, j] +  # Initial
+  n_v1E[i, j] -                # New exposed
+  n_Ev1Iv1[i, j]               # Moving to infected
+update(Ev2[,]) <- Ev2[i, j] +  # Initial
+  n_v2E[i, j] -                # New exposed
+  n_Ev12v2[i, j]               # Moving to infected
 
 ## Infected compartments: No Aging
 # New value of IS is:
-#   (old value) + (new_exposed) + (new_imports) - (nb of infectious moving to recovered)
+#   (old value) + (new_infected) + (new_imports) - (nb of infectious moving to recovered)
 # import_t corresponds to the number of new imports in this region / age group
 # Assumption: All imports are unvaccinated
-update(Is[,]) <- Is[i, j] + n_EsIs[i, j] - n_IsR[i, j] + import_t[i,j]
-update(Iv1[,]) <- Iv1[i, j] + n_Ev1Iv1[i, j] - n_Iv1R[i, j]
-update(Iv2[,]) <- Iv2[i, j] + n_Ev12v2[i, j] - n_Iv2R[i, j]
+update(Is[,]) <- Is[i, j] +       # Initial
+  n_EsIs[i, j] + import_t[i,j] -  # New infected
+  n_IsR[i, j]                     # Moving to recovered
+update(Iv1[,]) <- Iv1[i, j] +     # Initial
+  n_Ev1Iv1[i, j] -                # New infected
+  n_Iv1R[i, j]                    # Moving to recovered
+update(Iv2[,]) <- Iv2[i, j] +     # Initial
+  n_Ev12v2[i, j] -                # New infected
+  n_Iv2R[i, j]                    # Moving to recovered
 
 ## Recovered compartments: similar to Susceptible compartments
 # First age group:
-update(R[1, ]) <- R[1, j] + n_IsR[1, j] - 
-  n_R[1, j]
-update(RV1[1, ]) <- RV1[1, j] + n_Iv1R[1, j] - 
-  n_RV1[1, j]
-update(RV2[1, ]) <- RV2[1, j] + n_Iv2R[1, j] - 
-  n_RV2RV2[1, j]
+update(R[1, ]) <- R[1, j] +      # Initial
+  n_IsR[1, j] -                  # New recovered
+  n_R[1, j]                      # Ageing out
+update(RV1[1, ]) <- RV1[1, j] +  # Initial
+  n_Iv1R[1, j] -                 # New recovered
+  n_RV1[1, j]                    # Ageing out
+update(RV2[1, ]) <- RV2[1, j] +  # Initial
+  n_Iv2R[1, j] -                 # New recovered
+  n_RV2RV2[1, j]                 # Ageing out
 
 # Following age groups:
-update(R[2 : len_ageing,]) <- R[i, j] + n_IsR[i, j] + 
-  n_RR[i - 1, j] - n_R[i, j]
-update(RV1[2 : len_ageing,]) <- RV1[i, j] + n_Iv1R[i, j] + 
-  n_RV1RV1[i - 1, j] + n_RRV1[i - 1, j] - n_RV1[i, j]
-update(RV2[2 : len_ageing,]) <- RV2[i, j] + n_Iv2R[i, j] + 
-  n_RV2RV2[i - 1, j] + n_RV1RV2[i - 1, j] - n_RV2RV2[i, j]
+update(R[2 : len_ageing,]) <- R[i, j] +         # Initial
+  n_RR[i - 1, j] -                              # Ageing in
+  n_R[i, j] +                                   # Ageing out
+  n_IsR[i, j]                                   # Recovered
+update(RV1[2 : len_ageing,]) <- RV1[i, j] +     # Initial
+  n_RV1RV1[i - 1, j] + n_RRV1[i - 1, j] -       # Ageing in
+  n_RV1[i, j] +                                 # Ageing out
+  n_Iv1R[i, j]                                  # Recovered
+update(RV2[2 : len_ageing,]) <- RV2[i, j] +     # Initial
+  n_RV2RV2[i - 1, j] + n_RV1RV2[i - 1, j] -     # Ageing in
+  n_RV2RV2[i, j] +                              # Ageing out
+  n_Iv2R[i, j]                                  # Recovered
 
 # Last age group:
-update(R[N_age,]) <- R[N_age, j] + n_IsR[N_age, j] +
-  n_RR[len_ageing, j]
-update(RV1[N_age,]) <- RV1[N_age, j] + n_Iv1R[N_age, j] +
-  n_RV1RV1[len_ageing, j] + n_RRV1[len_ageing, j]
-update(RV2[N_age,]) <- RV2[N_age, j] + n_Iv2R[N_age, j] +
-  n_RV2RV2[len_ageing, j] + n_RV1RV2[len_ageing, j]
+update(R[N_age,]) <- R[N_age, j] +                     # Initial
+  n_RR[len_ageing, j] +                                # Ageing in
+  n_IsR[N_age, j]                                      # Recovered
+update(RV1[N_age,]) <- RV1[N_age, j] +                 # Initial
+  n_RV1RV1[len_ageing, j] + n_RRV1[len_ageing, j] +    # Ageing in
+  n_Iv1R[N_age, j]                                     # Recovered
+update(RV2[N_age,]) <- RV2[N_age, j] +                 # Initial
+  n_RV2RV2[len_ageing, j] + n_RV1RV2[len_ageing, j] +  # Ageing in
+  n_Iv2R[N_age, j]                                     # Recovered
 
 ## Track number of new infections
 update(new_IS[, ]) <- n_EsIs[i, j]
@@ -129,7 +172,7 @@ v2 <- user(.1)
 
 
 
-#### 4- Compute lambda_t, the force of infection including the impact of seasonnality ####
+#### 4- Compute lambda_t, the force of infection including the impact of seasonality ####
 
 lambda_t[,] <- lambda[i,j] * 
   exp(X * cos(2 * 3.14 * time / 365) + Y * sin(2 * 3.14 * time / 365))
