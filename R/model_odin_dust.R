@@ -189,7 +189,7 @@ lambda[,] <- beta * cases_ij[i, j] / N
 beta <- user(1.8)
 ## Total population size
 N <- sum(S[,]) + sum(V1[,]) + sum(V2[,]) + sum(Es[,]) + sum(Ev1[,]) + sum(Ev2[,]) + 
-  sum(Is[,]) + sum(Iv1[,]) + sum(Iv2[,]) + sum(R[,])
+  sum(Is[,]) + sum(Iv1[,]) + sum(Iv2[,]) + sum(R[,]) + sum(RV1[,]) + sum(RV2[,])
 
 ## Compute the potential of infection given the current number of infectious cases
 ## in each age group / region. Transmission from cases A (age i, region j) to 
