@@ -19,7 +19,7 @@ si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
 
 ## Define number of contacts
-beta <- 1
+beta <- 2
 
 ## Define vaccine efficacy
 # Against infection

@@ -274,9 +274,18 @@ n_RV1[,] <- rpois(mean_RV1[i, j])
 n_RV2RV2[,] <- rpois(mean_RV2[i, j])
 len_ageing <- N_age - 1
 
+# If number of people ageing is above the number of people left in the compartment, set it 
+# to the current number of individuals left in the compartments
+n_S[,] <- if(n_S[i,j] > S[i, j]) S[i, j] else n_S[i,j]
+n_V1[,] <- if(n_V1[i,j] > V1[i, j]) V1[i, j] else n_V1[i,j]
+n_V2V2[,] <- if(n_V2V2[i,j] > V2[i, j]) V2[i, j] else n_V2V2[i,j]
+n_R[,] <- if(n_R[i,j] > R[i, j]) R[i, j] else n_R[i,j]
+n_RV1[,] <- if(n_RV1[i,j] > RV1[i, j]) RV1[i, j] else n_RV1[i,j]
+n_RV2RV2[,] <- if(n_RV2RV2[i,j] > RV2[i, j]) RV2[i, j] else n_RV2RV2[i,j]
+
 ## Number of ageing movements between specific compartments
 # In susceptible compartments
-n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], array_cov1[i, j, step])
+n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], array_cov1[i, j, iter])
 n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
 
 # n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, iter])
