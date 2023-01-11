@@ -233,12 +233,14 @@ vacc2 <- user(.1)
 #### 5- Compute the number of importations ####
 
 ### Extract the number of importation per age / region at time (step + 1)
-import_t[,] <- import[i, j, step + 1]
+import_t[,] <- import[i, j, iter]
 
 ## Define time step
 dt <- user(1)
-initial(time) <- 0
+initial(time) <- 1
 update(time) <- (step + 1) * dt
+initial(iter) <- 1
+update(iter) <- step + 1
 
 ## Initialise the number of importations / dimensions of the matrices
 import[,,] <- user()
@@ -250,17 +252,17 @@ N_time <- user(2)
 #### 6- Compute ageing ####
 
 ## Draw number of new susceptibles
-new_birth[] <- rpois(array_new[i, step])
+new_birth[] <- rpois(array_new[i, iter])
 array_new[,] <- user()
 dim(array_new) <- c(N_reg, N_time)
 dim(new_birth) <- c(N_reg)
 
-mean_S[,] <- if(step %% 365 == 1) S[i, j] / 365 else mean_S[i,j]
-mean_V1[,] <- if(step %% 365 == 1) V1[i, j] / 365 else mean_V1[i,j]
-mean_V2[,] <- if(step %% 365 == 1) V2[i, j] / 365 else mean_V2[i,j]
-mean_R[,] <- if(step %% 365 == 1) R[i, j] / 365 else mean_R[i,j]
-mean_RV1[,] <- if(step %% 365 == 1) RV1[i, j] / 365 else mean_RV1[i,j]
-mean_RV2[,] <- if(step %% 365 == 1) RV2[i, j] / 365 else mean_RV2[i,j]
+mean_S[,] <- if(iter %% 365 == 1) (S[i, j] / 365) else mean_S[i,j]
+mean_V1[,] <- if(iter %% 365 == 1) (V1[i, j] / 365) else mean_V1[i,j]
+mean_V2[,] <- if(iter %% 365 == 1) (V2[i, j] / 365) else mean_V2[i,j]
+mean_R[,] <- if(iter %% 365 == 1) (R[i, j] / 365) else mean_R[i,j]
+mean_RV1[,] <- if(iter %% 365 == 1) (RV1[i, j] / 365) else mean_RV1[i,j]
+mean_RV2[,] <- if(iter %% 365 == 1) (RV2[i, j] / 365) else mean_RV2[i,j]
 
 
 ## Compute overall number of movements between compartments
@@ -277,9 +279,9 @@ len_ageing <- N_age - 1
 n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], array_cov1[i, j, step])
 n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
 
-# n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, step])
-prop_v1v2[1:len_ageing,] <- if(step == 1 || i == 1) 0 else
-  (array_cov2[i, j, step] - array_cov2[i - 1, j, step - 1]) / array_cov1[i - 1, j, step - 1]
+# n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, iter])
+prop_v1v2[1:len_ageing,] <- if(iter == 1 || i == 1) 0 else
+  (array_cov2[i, j, iter] - array_cov2[i - 1, j, iter - 1]) / array_cov1[i - 1, j, iter - 1]
 dim(prop_v1v2) <- c(len_ageing, N_reg)
 n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], prop_v1v2[i, j])
 n_V1V1[1 : len_ageing,] <- n_V1[i, j] - n_V1V2[i, j]
@@ -291,9 +293,9 @@ dim(array_cov2) <- c(len_ageing, N_reg, N_time)
 
 
 # In Recovered compartments
-n_RRV1[,] <- rbinom(n_R[i, j], array_cov1[i, j, step])
+n_RRV1[,] <- rbinom(n_R[i, j], array_cov1[i, j, iter])
 n_RR[,] <- n_R[i, j] - n_RRV1[i, j]
-n_RV1RV2[,] <- rbinom(n_RV1[i, j], array_cov2[i, j, step])
+n_RV1RV2[,] <- rbinom(n_RV1[i, j], array_cov2[i, j, iter])
 n_RV1RV1[,] <- n_RV1[i, j] - n_RV1RV2[i, j]
 
 #### 7- Initial conditions ####

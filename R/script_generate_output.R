@@ -1,3 +1,4 @@
+set.seed(1)
 ## Script:
 ## Import odin.dust model, define model variables, run model, plot outputs
 
@@ -201,7 +202,7 @@ seir_model <- si_age$new(pars = list(m = ref_m, d = 1/ref_d, a = a,
                                      
                                      array_cov1 = array_cov1[-1,,], array_cov2 = array_cov2[-1,,],
                                      array_new = new_birth, dt = 1),
-                        step = 1, n_particles = n_part, n_threads = 1L, seed = 1L)
+                        time = 1, n_particles = n_part, n_threads = 1L, seed = 1L)
 
 
 ## Define array output_sim, containing the number of individuals in each compartment per day
@@ -212,7 +213,7 @@ output_sim <- array(NA, dim = c(seir_model$info()$len, n_part, t_tot))
 states <- c("S", "V1", "V2", "Es", "Ev1", "Ev2", "Is", "Iv1", "Iv2", "R", "RV1", 
             "RV2", "new_IS", "new_IV1", "new_IV2")
 ## The first row of output_sim contains the time
-rownames(output_sim) <- c("Time",
+rownames(output_sim) <- c("Time", "iter",
   paste0(rep(paste0(rep(states, each = nrow(ref_d)), 
                     "_reg", rep(seq_len(nrow(ref_d)), 10)), each = nrow(ref_m)), 
          "_age", seq_len(nrow(ref_m)))
