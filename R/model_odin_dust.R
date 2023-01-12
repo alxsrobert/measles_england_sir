@@ -307,26 +307,46 @@ n_V2V2[,] <- if(n_V2V2[i,j] > (V2[i, j] - n_v2E[i, j])) (V2[i, j] - n_v2E[i, j])
 n_R[,] <- if(n_R[i,j] > (R[i, j] + n_IsR[i, j])) (R[i, j] + n_IsR[i, j]) else n_R[i,j]
 n_RV1[,] <- if(n_RV1[i,j] > (RV1[i, j] + n_Iv1R[i, j])) (RV1[i, j] + n_Iv1R[i, j]) else n_RV1[i,j]
 n_RV2RV2[,] <- if(n_RV2RV2[i,j] > (RV2[i, j] + n_Iv2R[i, j])) (RV2[i, j] + n_Iv2R[i, j]) else n_RV2RV2[i,j]
-n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
 
-# n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, iter])
-prop_v1v2[1:len_ageing,] <- if(iter == 1 || i == 1) 0 else
-  (array_cov2[i, j, iter] - array_cov2[i - 1, j, iter - 1]) / array_cov1[i - 1, j, iter - 1]
+## Compute the proportion of individuals that get vaccinated as they age
+# number of people in S who move to V1 = (1 - susceptible who do not get vaccinated)
+#         = 1 - ((1 - v1 - v2)[at age i] / (1 - v1 - v2)[at age i - 1])
+#  i.e (1 - proportion of unvaccinated at i-1 who are not getting vaccinated at i) 
+prop_v1[1:len_ageing,] <- if(iter == 1 || i == 1) array_cov1[i, j, iter] else if(iter <= 365)
+  (1 - (1 - array_cov1[i, j, iter] - array_cov2[i, j, iter]) / 
+     (1 - array_cov1[i - 1, j, 1] - array_cov2[i - 1, j, 1])) else
+    (1 - (1 - array_cov1[i, j, iter] - array_cov2[i, j, iter]) / 
+       (1 - array_cov1[i - 1, j, iter - 365] - array_cov2[i - 1, j, iter - 365]))
+dim(prop_v1) <- c(len_ageing, N_reg)
+# Draw the number of individuals gaining vaccination as they age
+n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], prop_v1[i, j])
+n_RRV1[1 : len_ageing,] <- rbinom(n_R[i, j], prop_v1[i, j])
+# Draw the number of individuals who remain susceptible
+n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
+n_RR[1 : len_ageing,] <- n_R[i, j] - n_RRV1[i, j]
+
+# number of people in V1 who move to V2 = V1 who get vaccinated
+#         = (v2[at age i] - V2[at age i-1]) / (v1[at age i - 1])
+#  i.e (1 - proportion of V1 at i-1 who are getting vaccinated at i) 
+prop_v1v2[1:len_ageing,] <- if(iter == 1 || i == 1) 0 else if(iter <= 365)
+  (array_cov2[i, j, iter] - array_cov2[i - 1, j, 1]) / 
+  (array_cov1[i - 1, j, 1]) else
+    (array_cov2[i, j, iter] - array_cov2[i - 1, j, iter - 365]) / 
+  (array_cov1[i - 1, j, iter - 365])
+
 dim(prop_v1v2) <- c(len_ageing, N_reg)
+# Draw the number of individuals gaining vaccination as they age
 n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], prop_v1v2[i, j])
+n_RV1RV2[1 : len_ageing,] <- rbinom(n_RV1[i, j], prop_v1v2[i, j])
+# Draw the number of individuals who remain in V1
 n_V1V1[1 : len_ageing,] <- n_V1[i, j] - n_V1V2[i, j]
+n_RV1RV1[1 : len_ageing,] <- n_RV1[i, j] - n_RV1RV2[i, j]
 
 array_cov1[,,] <- user()
 dim(array_cov1) <- c(len_ageing, N_reg, N_time)
 array_cov2[,,] <- user()
 dim(array_cov2) <- c(len_ageing, N_reg, N_time)
 
-
-# In Recovered compartments
-n_RRV1[,] <- rbinom(n_R[i, j], array_cov1[i, j, iter])
-n_RR[,] <- n_R[i, j] - n_RRV1[i, j]
-n_RV1RV2[,] <- rbinom(n_RV1[i, j], array_cov2[i, j, iter])
-n_RV1RV1[,] <- n_RV1[i, j] - n_RV1RV2[i, j]
 
 #### 7- Initial conditions ####
 
