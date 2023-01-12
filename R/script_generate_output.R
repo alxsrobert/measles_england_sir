@@ -19,7 +19,7 @@ si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
 
 ## Define number of contacts
-beta <- 2
+beta <- 1
 
 ## Define vaccine efficacy
 # Against infection
@@ -371,7 +371,8 @@ for(i in seq_len(nrow(ref_d))){
     
     ## Add the number of recovered
     matlines(time, t(v2 / N), col = cols[["V2"]], lty = 1)
-    
+    abline(h = seq(0, 1, .05), lty = 2)
+    abline(v = 365 * seq(1, 5, 1), lty = 2)
     ## Add the legend in the topleft panel
     if(i == 1 & j == 1)
       legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
