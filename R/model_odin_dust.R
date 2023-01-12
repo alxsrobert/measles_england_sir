@@ -251,21 +251,44 @@ N_time <- user(2)
 
 #### 6- Compute ageing ####
 
-## Draw number of new susceptibles
+## Draw number of new susceptibles (births)
 new_birth[] <- rpois(array_new[i, iter])
 array_new[,] <- user()
 dim(array_new) <- c(N_reg, N_time)
 dim(new_birth) <- c(N_reg)
 
-mean_S[,] <- if(iter %% 365 == 1) (S[i, j] / 365) else mean_S[i,j]
-mean_V1[,] <- if(iter %% 365 == 1) (V1[i, j] / 365) else mean_V1[i,j]
-mean_V2[,] <- if(iter %% 365 == 1) (V2[i, j] / 365) else mean_V2[i,j]
-mean_R[,] <- if(iter %% 365 == 1) (R[i, j] / 365) else mean_R[i,j]
-mean_RV1[,] <- if(iter %% 365 == 1) (RV1[i, j] / 365) else mean_RV1[i,j]
-mean_RV2[,] <- if(iter %% 365 == 1) (RV2[i, j] / 365) else mean_RV2[i,j]
+## Compute number of individuals ageing in each compartment
+# First, compute the number of individuals per vaccination status (S, V1, and V2)
+pop_per_age_s[,] <- (S[i, j] + Es[i, j] + Is[i, j] + R[i, j])
+pop_per_age_v1[,] <- (V1[i, j] + Ev1[i, j] + Iv1[i, j] + RV1[i, j])
+pop_per_age_v2[,] <- (V2[i, j] + Ev2[i, j] + Iv2[i, j] + RV2[i, j])
+
+dim(pop_per_age_s) <- c(N_age, N_reg)
+dim(pop_per_age_v1) <- c(N_age, N_reg)
+dim(pop_per_age_v2) <- c(N_age, N_reg)
+
+# Then, draw the number of individuals ageing each day (depending on the population per vaccination status)
+N_ageing_S[,] <- if(iter %% 365 == 1) (pop_per_age_s[i, j])/365 else N_ageing_S[i, j]
+N_ageing_V1[,] <- if(iter %% 365 == 1) (pop_per_age_v1[i, j])/365 else N_ageing_V1[i, j]
+N_ageing_V2[,] <- if(iter %% 365 == 1) (pop_per_age_v2[i, j])/365 else N_ageing_V2[i, j]
+
+dim(N_ageing_S) <- c(N_age, N_reg)
+dim(N_ageing_V1) <- c(N_age, N_reg)
+dim(N_ageing_V2) <- c(N_age, N_reg)
+
+# Compute the mean number of individuals ageing per compartment using the proportion
+# of individuals from pop_per_age that belong to the compartment of interest
+# i.e: number of people ageing in compartment X = number of people ageing in this vaccination status *
+#                                                 proportion of the population in this vaccination status that belongs to X
+mean_S[,] <- if(pop_per_age_s[i, j] > 0) N_ageing_S[i, j] * (S[i, j]/(pop_per_age_s[i, j])) else 0
+mean_V1[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (V1[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_V2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (V2[i, j]/(pop_per_age_v2[i, j])) else 0
+mean_R[,] <- if(pop_per_age_s[i, j] > 0) N_ageing_S[i, j] * (R[i, j]/(pop_per_age_s[i, j])) else 0
+mean_RV1[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (RV1[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (RV2[i, j]/(pop_per_age_v2[i, j])) else 0
 
 
-## Compute overall number of movements between compartments
+## Compute overall number of movements between compartments using a poisson distribution
 n_S[,] <- rpois(mean_S[i, j])
 n_V1[,] <- rpois(mean_V1[i, j])
 n_V2V2[,] <- rpois(mean_V2[i, j])
@@ -276,16 +299,14 @@ len_ageing <- N_age - 1
 
 # If number of people ageing is above the number of people left in the compartment, set it 
 # to the current number of individuals left in the compartments
-n_S[,] <- if(n_S[i,j] > S[i, j]) S[i, j] else n_S[i,j]
-n_V1[,] <- if(n_V1[i,j] > V1[i, j]) V1[i, j] else n_V1[i,j]
-n_V2V2[,] <- if(n_V2V2[i,j] > V2[i, j]) V2[i, j] else n_V2V2[i,j]
-n_R[,] <- if(n_R[i,j] > R[i, j]) R[i, j] else n_R[i,j]
-n_RV1[,] <- if(n_RV1[i,j] > RV1[i, j]) RV1[i, j] else n_RV1[i,j]
-n_RV2RV2[,] <- if(n_RV2RV2[i,j] > RV2[i, j]) RV2[i, j] else n_RV2RV2[i,j]
-
-## Number of ageing movements between specific compartments
-# In susceptible compartments
-n_SV1[1 : len_ageing,] <- rbinom(n_S[i, j], array_cov1[i, j, iter])
+# The number of people left in the compartment is computed from the initial number of people and 
+# the number of new exposed / recovered
+n_S[,] <- if(n_S[i,j] > (S[i, j] - n_SEs[i, j])) (S[i, j]- n_SEs[i, j]) else n_S[i,j]
+n_V1[,] <- if(n_V1[i,j] > (V1[i, j] - n_v1E[i, j])) (V1[i, j] - n_v1E[i, j]) else n_V1[i,j]
+n_V2V2[,] <- if(n_V2V2[i,j] > (V2[i, j] - n_v2E[i, j])) (V2[i, j] - n_v2E[i, j]) else n_V2V2[i,j]
+n_R[,] <- if(n_R[i,j] > (R[i, j] + n_IsR[i, j])) (R[i, j] + n_IsR[i, j]) else n_R[i,j]
+n_RV1[,] <- if(n_RV1[i,j] > (RV1[i, j] + n_Iv1R[i, j])) (RV1[i, j] + n_Iv1R[i, j]) else n_RV1[i,j]
+n_RV2RV2[,] <- if(n_RV2RV2[i,j] > (RV2[i, j] + n_Iv2R[i, j])) (RV2[i, j] + n_Iv2R[i, j]) else n_RV2RV2[i,j]
 n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SV1[i, j]
 
 # n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], array_cov2[i, j, iter])
