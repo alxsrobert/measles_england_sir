@@ -101,103 +101,74 @@ output_sim[grep("_reg1_", rownames(output_sim)), 1, 1:10]
 
 #### Generate plots stratified by age / region ####
 
+source("R/function_figure.R")
 ## Extract time and number of individuals per compartmemt
-time <- output_sim[1, 1, ]
-output <- output_sim[-1, , ]
 
 ## Extract the distribution of the population at the last time step
-final_res <- output_sim[, , dim(output)[3]]
+final_res <- output_sim[, , dim(output_sim)[3]]
 
 ## Compute the total number of cases per region across simulations
 print(summary(apply(output_sim[grep("new_I", rownames(final_res)), ,], 2, sum)))
-## Compute the total number of cases per region across simulations
-print(summary(apply(output_sim[grep("new_IS_", rownames(final_res)), ,], 2, sum)))
-## Compute the total number of single vaccinated cases per region across simulations
-print(summary(apply(output_sim[grep("new_IV1_", rownames(final_res)), ,], 2, sum)))
-## Compute the total number of double vaccinated cases per region across simulations
-print(summary(apply(output_sim[grep("new_IV2_", rownames(final_res)), ,], 2, sum)))
 
+if(nrow(ref_d) > 3 | nrow(ref_m) > 3){
+  n_row <- n_col <- 3
+  lab_plot <- "%02d" 
+} else {
+  n_row <- nrow(ref_m)
+  n_col <- nrow(ref_d)
+  lab_plot <- ""
+}
 
 ### Generate plot of the number of Susceptibles, Infected and Recovered individuals through time
 ### per region / age group
-png(filename = "Output/fig_sir_import_age.png", width = 600, height = 800)
-par(mfrow = c(nrow(ref_d),nrow(ref_m)), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
-    oma = c(2, 2, 0, 2), las = 1, bty = "l")
+message("Figures distribution of the compartments")
+png(filename = paste0("Output/sir/fig_sir_import_age", lab_plot, ".png"), 
+    width = 600, height = 800)
+par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
 
 ## Define colour scheme
 cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
-
-for(i in seq_len(nrow(ref_d))){
-  for(j in seq_len(nrow(ref_m))){
-    ## Extract entries from region i and age j
-    lab_i_j <- paste0("_reg", i, "_age", j)
-    ## Compute total number of susceptibles + vaccinated
-    susceptibles <- colSums(output[c(paste0("S", lab_i_j), paste0("V1", lab_i_j), paste0("V2", lab_i_j)),, ])
-    ## Compute total number of infectious
-    infected <- colSums(output[c(paste0("Is", lab_i_j), paste0("Iv1", lab_i_j), paste0("Iv2", lab_i_j)),, ])
-    ## Compute total number of recovered
-    recovered <- colSums(output[c(paste0("R", lab_i_j), paste0("RV1", lab_i_j), paste0("RV2", lab_i_j)),, ])
-
-    ## Plot the number of susceptible individuals through time
-    matplot(time, t(susceptibles), type = "l", xlab = "", ylab = "", yaxt="none", 
-            main = paste0("Age ", j, "Region", i), col = cols[["S"]], lty = 1, 
-            ylim = range(c(susceptibles, infected, recovered)))
-    
-    ## Add the number of infected
-    matlines(time, t(infected), col = cols[["I"]], lty = 1)
-    
-    ## Add the number of recovered
-    matlines(time, t(recovered), col = cols[["R"]], lty = 1)
-    
-    ## Add the legend in the topleft panel
-    if(i == 1 & j == 1)
-      legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
-    axis(2, las =2)
-  }
-}
-
-# Add axis names
-title(xlab = "Time (days)", outer = T, line = 0, cex.lab = 2)
-title(ylab = "Number of individuals", outer = T, line = 0, cex.lab = 2)
+## Three categories: Susceptibles - Infected - Recovered
+categories <- list(c("S", "V1", "V2"), c("IS", "Iv1", "Iv2"), c("R", "RV1", "RV2"))
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
+                legend = T, prop = F)
 
 dev.off()
 
 ### Generate plot of the number of Infected per region / age group, stratified by vaccination status
-png(filename = "Output/fig_new_cases_import_age.png", width = 600, height = 800)
-par(mfrow = c(nrow(ref_d),nrow(ref_m)), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
-    oma = c(2, 2, 0, 2), las = 1, bty = "l")
-
+message("Figures new cases")
+png(filename = paste0("Output/new_cases/fig_new_cases_import_age", lab_plot, ".png"), 
+    width = 600, height = 800)
+par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
 ## Define colour scheme
 cols <- c(Is = "#8c8cd9", Iv1 = "#cc0044", Iv2 = "#999966")
+## Three categories: New unvaccinated infected - new infected vaccinated 1x - new infected vaccinated 2x
+categories <- list("new_IS", "new_IV1", "new_IV2")
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
+                legend = T, prop = F)
 
-for(i in seq_len(nrow(ref_d))){
-  for(j in seq_len(nrow(ref_m))){
-    # Extract the rownames of all rows of interest
-    lab_i_j <- c(paste0("new_IS_reg", i, "_age", j), paste0("new_IV1_reg", i, "_age", j),
-                 paste0("new_IV2_reg", i, "_age", j))
-    
-    ## Plot the number of non-vaccinated infectious individuals at each date
-    matplot(time, t(output[lab_i_j[1],, ]), type = "l", 
-            xlab = "", ylab = "", yaxt="none", main = paste0("Age ", j, "Region", i),
-            col = cols[["Is"]], lty = 1, ylim=range(output[lab_i_j,,]))
-    
-    ## Add the number of single-vaccinated infectious indviduals
-    matlines(time, t(output[lab_i_j[2], , ]), col = cols[["Iv1"]], lty = 1)
-    
-    ## Add the number of double-vaccinated infectious indviduals
-    matlines(time, t(output[lab_i_j[3], , ]), col = cols[["Iv2"]], lty = 1)
-    
-    ## Add a legend to the topleft panel
-    if(i == 1 & j == 1)
-      legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
-    
-    axis(2, las =2)
-    
-  }
-}
-# Add axis names
-title(xlab = "Time (days)", outer = T, line = 0, cex.lab = 2)
-title(ylab = "Number of individuals", outer = T, line = 0, cex.lab = 2)
+dev.off()
+
+### Generate plot of the vaccine distribution per age group / region
+### per region / age group
+png(filename = paste0("Output/vaccine/fig_vaccine_import_age", lab_plot, ".png"), 
+    width = 600, height = 800)
+par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
+cols <- c(Unvaccinated = "#8c8cd9", V1 = "#cc0044", V2 = "#999966")
+## Three categories: Unvaccinated - Vaccinated 1x - Vaccinated 2x
+categories <- list(c("S", "Es", "Is", "R"), c("V1", "Ev1", "Iv1", "RV1"), 
+                   c("V2", "Ev2", "Iv2", "RV2"))
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = NA, outer_y = T, y_lab = "Proportion of individuals", 
+                legend = T, prop = T)
 
 dev.off()
 
@@ -210,48 +181,42 @@ plot(beta * exp(X * cos(2 * 3.14 * (1:365) / 365) + Y * sin(2 * 3.14 * (1:365) /
 plot(apply(import, 3, sum), type = "l", 
      ylab = "Nb of importations", xlab = "Time (days)")
 
-### Generate plot of the vaccine distribution per age group / region
+#### Generate country-level plots ####
+
+
+png(filename = "Output/fig_all.png", width = 600, height = 800)
+par(mfrow = c(3, 1), mar = c(3, 6, 1, 2), oma = c(2, 0, 1, 0), las = 1, bty = "l") 
+
+### Generate plot of the number of Susceptibles, Infected and Recovered individuals through time
 ### per region / age group
-png(filename = "Output/fig_vaccine_import_age.png", width = 600, height = 800)
-par(mfrow = c(nrow(ref_d),nrow(ref_m)), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
-    oma = c(2, 2, 0, 2), las = 1, bty = "l")
+categories <- list(c("S", "V1", "V2"), c("Is", "Iv1", "Iv2"), 
+                   c("R", "RV1", "RV2"))
 
 ## Define colour scheme
+cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
+
+stratified_plot(by_age = F, by_reg = F, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = "Distribution of compartments", outer_y = T, 
+                y_lab = "Number of individuals", legend = T, prop = F)
+
+### Generate plot of the number of Infected per region / age group, stratified by vaccination status
+categories <- list(c("new_IS"), c("new_IV1"), c("new_IV2"))
+
+## Define colour scheme
+cols <- c(Is = "#8c8cd9", Iv1 = "#cc0044", Iv2 = "#999966")
+stratified_plot(by_age = F, by_reg = F, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = "New cases by vaccine status", outer_y = T, 
+                y_lab = "Number of individuals", legend = T, prop = F)
+
+## Generate plot with the distribution of vaccine status
+categories <- list(c("S", "Es", "Is", "R"), c("V1", "Ev1", "Iv1", "RV1"), 
+                   c("V2", "Ev2", "Iv2", "RV2"))
+## Define colour scheme
 cols <- c(Unvaccinated = "#8c8cd9", V1 = "#cc0044", V2 = "#999966")
-
-for(i in seq_len(nrow(ref_d))){
-  for(j in seq_len(nrow(ref_m))){
-    ## Extract entries from region i and age j
-    lab_i_j <- paste0("_reg", i, "_age", j)
-    ## Compute total number of non-vaccinated
-    unvax <- colSums(output[c(paste0("S", lab_i_j), paste0("Es", lab_i_j), paste0("Is", lab_i_j), 
-                              paste0("R", lab_i_j)),, ])
-    ## Compute total number of vaccinated once
-    v1 <- colSums(output[c(paste0("V1", lab_i_j), paste0("Ev1", lab_i_j), paste0("Iv1", lab_i_j), 
-                           paste0("RV1", lab_i_j)),, ])
-    ## Compute total number of vaccinated twice
-    v2 <- colSums(output[c(paste0("V2", lab_i_j), paste0("Ev2", lab_i_j), paste0("Iv2", lab_i_j), 
-                           paste0("RV2", lab_i_j)),, ])
-    
-    N <- unvax + v1 + v2 
-    
-    ## Plot the number of susceptible individuals through time
-    matplot(time, t(unvax / N), type = "l", xlab = "", ylab = "", yaxt = "none", 
-            main = paste0("Age ", j, "Region", i), col = cols[["Unvaccinated"]], lty = 1, 
-            ylim = c(0, 1))
-    
-    ## Add the number of infected
-    matlines(time, t(v1 / N), col = cols[["V1"]], lty = 1)
-    
-    ## Add the number of recovered
-    matlines(time, t(v2 / N), col = cols[["V2"]], lty = 1)
-    abline(h = seq(0, 1, .05), lty = 2)
-    abline(v = 365 * seq(1, 5, 1), lty = 2)
-    ## Add the legend in the topleft panel
-    if(i == 1 & j == 1)
-      legend("right", lwd = 1, col = cols, legend = names(cols), bty = "n")
-    axis(2, las =2)
-  }
-}
-
+stratified_plot(by_age = F, by_reg = F, N_reg = N_reg, N_age = N_age, 
+                dt_output = output_sim, cats = categories, colour = cols, 
+                main_lab = "Distribution of vaccine coverage", outer_y = T, 
+                y_lab = "Proportion of individuals", legend = T, prop = T)
 dev.off()
