@@ -2,7 +2,6 @@ set.seed(1)
 ## Script:
 ## Import odin.dust model, define model variables, run model, plot outputs
 
-## 4 regions ; 3 age groups
 
 #### Import libraries ####
 
@@ -19,7 +18,7 @@ si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
 
 ## Define number of contacts
-beta <- 1
+beta <- 15
 
 ## Define vaccine efficacy
 # Against infection
@@ -74,7 +73,9 @@ seir_model <- si_age$new(pars = list(m = ref_m, d = 1/ref_d, a = a,
                                      R_init = R, RV1_init = RV1, RV2_init = RV2,
                                      
                                      array_cov1 = array_cov1[-1,,], array_cov2 = array_cov2[-1,,],
-                                     array_new = new_birth, dt = 1),
+                                     array_new = new_birth, dt = 1, 
+                                     year_per_age = year_per_age
+                                     ),
                         time = 1, n_particles = n_part, n_threads = 1L, seed = 1L)
 
 
@@ -98,7 +99,7 @@ for (t in seq_len(t_tot)) {
 }
 output_sim[grep("_reg1_", rownames(output_sim)), 1, 1:10]
 
-#### Analyse simulations / generate plots ####
+#### Generate plots stratified by age / region ####
 
 ## Extract time and number of individuals per compartmemt
 time <- output_sim[1, 1, ]
