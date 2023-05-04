@@ -117,10 +117,11 @@ update(RV2[2 : len_ageing,]) <- RV2[i, j] +     # Initial
   n_RV2RV2[i, j] +                              # Ageing out
   n_Iv2R[i, j]                                  # Recovered
 
-# Last age group:
+# Last age group (TEMP: Remove death here):
 update(R[N_age,]) <- R[N_age, j] +                     # Initial
   n_RR[len_ageing, j] +                                # Ageing in
-  n_IsR[N_age, j]                                      # Recovered
+  n_IsR[N_age, j] -                                    # Recovered
+  new_birth[j]                                         # Deaths
 update(RV1[N_age,]) <- RV1[N_age, j] +                 # Initial
   n_RV1RV1[len_ageing, j] + n_RRV1[len_ageing, j] +    # Ageing in
   n_Iv1R[N_age, j]                                     # Recovered
