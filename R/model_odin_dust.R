@@ -134,7 +134,7 @@ update(new_IS[, ]) <- n_EsIs[i, j]
 update(new_IV1[, ]) <- n_Ev1Iv1[i, j]
 update(new_IV2[, ]) <- n_Ev12v2[i, j]
 
-#### 2- Compute "n_" variables: the number of individuals changing between compartments ####
+#### 2- Compute "n_" variables: the number of individuals changing between compartments (infection!) ####
 ## Draw from binomial distributions: 
 # Depends on the number of individuals in the compartment and the probability of moving
 n_SEs[,] <- rbinom(S[i, j], p_SE[i, j])
@@ -267,11 +267,13 @@ pop_per_age_v2[,] <- (V2[i, j] + Ev2[i, j] + Iv2[i, j] + RV2[i, j])
 dim(pop_per_age_s) <- c(N_age, N_reg)
 dim(pop_per_age_v1) <- c(N_age, N_reg)
 dim(pop_per_age_v2) <- c(N_age, N_reg)
+year_per_age[] <- user()
+dim(year_per_age) <- c(N_age)
 
 # Then, draw the number of individuals ageing each day (depending on the population per vaccination status)
-N_ageing_S[,] <- if(iter %% 365 == 1) (pop_per_age_s[i, j])/365 else N_ageing_S[i, j]
-N_ageing_V1[,] <- if(iter %% 365 == 1) (pop_per_age_v1[i, j])/365 else N_ageing_V1[i, j]
-N_ageing_V2[,] <- if(iter %% 365 == 1) (pop_per_age_v2[i, j])/365 else N_ageing_V2[i, j]
+N_ageing_S[,] <- if(iter %% 365 == 1) (pop_per_age_s[i, j])/(year_per_age[i] * 365) else N_ageing_S[i, j]
+N_ageing_V1[,] <- if(iter %% 365 == 1) (pop_per_age_v1[i, j])/(year_per_age[i] * 365) else N_ageing_V1[i, j]
+N_ageing_V2[,] <- if(iter %% 365 == 1) (pop_per_age_v2[i, j])/(year_per_age[i] * 365) else N_ageing_V2[i, j]
 
 dim(N_ageing_S) <- c(N_age, N_reg)
 dim(N_ageing_V1) <- c(N_age, N_reg)
