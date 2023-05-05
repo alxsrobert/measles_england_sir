@@ -131,3 +131,10 @@ array_cov2 <- array(data = vacc_per_age$v2,
                                     unique(vacc_per_age$regions))
 )[,, rep(seq_len(N_time / 365), each  = 365)]
 
+## Mean number of import by day
+mean_import <- exp(.2 * cos(2 * pi * seq_len(t_tot) / 365) + 
+                     1.5 * sin(2 * pi * seq_len(t_tot) / 365) - 4)
+# Draw the number of importations (by age, region, and day)
+import <- array(round(rpois(n = t_tot * nrow(ref_m) * nrow(ref_d), 
+                            rep(mean_import, each = nrow(ref_m) * nrow(ref_d)))),
+                dim = c(nrow(ref_m), nrow(ref_d), t_tot))

@@ -128,3 +128,20 @@ ref_m <- socialmixr::contact_matrix(polymod, countries = "United Kingdom",
 # # The number of contacts between groups is smaller than within groups
 rownames(ref_m) <- colnames(ref_m) <- 
   paste(cumsum(year_per_age) - year_per_age, cumsum(year_per_age), sep = "-")
+
+## Define number of import
+mean_import_per_reg <- c(1, 3, 3, 2, 2, 3, 15, 7, 2) / nrow(ref_m)
+mean_import <- numeric()
+seas <- exp(.2 * cos(2 * pi * seq_len(t_tot) / 365) + 
+  1.5 * sin(2 * pi * seq_len(t_tot) / 365))
+
+import <- array(dim = c(nrow(ref_m), nrow(ref_d), t_tot))
+
+for(i in seq_along(mean_import_per_reg)){
+  # Mean number of import by day
+  mean_import_i <- mean_import_per_reg[i] * seas / sum(seas[1:365])
+  # Draw the number of importations (by age, region, and day)
+  import[,i,] <- round(rpois(n = t_tot * nrow(ref_m),
+                             rep(mean_import_i, each = nrow(ref_m))))
+}
+
