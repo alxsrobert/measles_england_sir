@@ -1,19 +1,25 @@
 stratified_plot <- function(by_age, by_reg, N_reg, N_age, dt_output, cats, 
                             colours, main_lab, y_lab, prop = FALSE, legend = TRUE,
-                            outer_y = FALSE){
+                            outer_y = FALSE, names_reg = NULL, names_age = NULL){
   ## Difference process if the figure is stratified by region / age
   if(by_age & by_reg){
     for(j in seq_len(N_age)){
       for(i in seq_len(N_reg)){
+        if(is.null(names_reg)) main_lab <- paste0("Region ", i) else 
+          main_lab <- names_reg[i]
+        if(is.null(names_age)) main_lab <- paste0(main_lab, " Age ", j) else 
+          main_lab <- paste(main_lab, names_age[j], sep = " ")
         ## Extract entries from region i and age j
         labs_cats <- lapply(cats, function(X) return(paste0(X, "_reg", i, "_age", j)))
         plot_cats(dt_output = dt_output, labs_cats = labs_cats, colour = colours, 
-                  main_lab = paste0("Age ", j, "Region", i), outer_y = outer_y, 
-                  legend = (i == 1), y_lab = if(i == 1) y_lab else "", prop = prop)
+                  main_lab = main_lab, outer_y = outer_y, legend = (i == 1), 
+                  y_lab = if(i == 1) y_lab else "", prop = prop)
       }
     }
   } else if(by_age){
     for(j in seq_len(N_age)){
+      if(is.null(names_age)) main_lab <- paste0("Age ", j) else 
+        main_lab <- paste0(names_age[j], " Years old")
       ## Extract entries from region i and age j
       labs_cats <- lapply(cats, function(X) 
         return(do.call(paste0, expand.grid(X, "_reg", seq_len(N_reg), "_age", j))))
@@ -23,6 +29,8 @@ stratified_plot <- function(by_age, by_reg, N_reg, N_age, dt_output, cats,
     }
   } else if(by_reg){
     for(i in seq_len(N_reg)){
+      if(is.null(names_reg)) main_lab <- paste0("Region ", i) else 
+        main_lab <- names_reg[i]
       ## Extract entries from region i and age j
       labs_cats <- lapply(cats, function(X) 
         return(do.call(paste0, expand.grid(X, "_reg", i, "_age", seq_len(N_age)))))

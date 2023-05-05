@@ -29,6 +29,10 @@ ref_d <- matrix(c(1, 2, 2, 3, 3, 4, 5, 4, 4,
                   5, 4, 4, 3, 3, 2, 1, 2, 3,
                   4, 3, 3, 2, 2, 2, 2, 1, 2,
                   4, 3, 4, 3, 2, 3, 3, 2, 1), nrow = N_reg)
+colnames(ref_d) <- rownames(ref_d) <- unique(dt_pop_select$Name)
+# Capitalise only the first letter of each word in rownames(ref_d)
+names_reg <- gsub("(^|[[:space:]])([[:alpha:]])", "\\2\\L\\2",  
+                  tolower(rownames(ref_d)), perl = TRUE)
 
 ## Compute number of births per year
 
@@ -122,3 +126,5 @@ ref_m <- matrix(, nrow = N_age, ncol = N_age)
 # The number of contacts between groups is smaller than within groups
 ref_m[] <- abs(rnorm(n = prod(dim(ref_m)), mean = .2, sd = .05))
 diag(ref_m)[] <- rnorm(n = nrow(ref_m), mean = .8, sd = .05)
+rownames(ref_m) <- colnames(ref_m) <- 
+  paste(cumsum(year_per_age) - year_per_age, cumsum(year_per_age), sep = "-")

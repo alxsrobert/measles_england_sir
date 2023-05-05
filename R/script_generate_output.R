@@ -131,10 +131,10 @@ par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0),
 cols <- c(S = "#8c8cd9", I = "#cc0044", R = "#999966")
 ## Three categories: Susceptibles - Infected - Recovered
 categories <- list(c("S", "V1", "V2"), c("IS", "Iv1", "Iv2"), c("R", "RV1", "RV2"))
-stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
-                dt_output = output_sim, cats = categories, colour = cols, 
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T,
+                dt_output = output_sim, cats = categories, colour = cols, prop = F,
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
-                legend = T, prop = F)
+                names_reg = rownames(ref_d), names_age = rownames(ref_m))
 
 dev.off()
 
@@ -148,10 +148,10 @@ par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0),
 cols <- c(Is = "#8c8cd9", Iv1 = "#cc0044", Iv2 = "#999966")
 ## Three categories: New unvaccinated infected - new infected vaccinated 1x - new infected vaccinated 2x
 categories <- list("new_IS", "new_IV1", "new_IV2")
-stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
-                dt_output = output_sim, cats = categories, colour = cols, 
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T,  
+                dt_output = output_sim, cats = categories, colour = cols, prop = F,  
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
-                legend = T, prop = F)
+                names_reg = rownames(ref_d), names_age = rownames(ref_m))
 
 dev.off()
 
@@ -165,10 +165,10 @@ cols <- c(Unvaccinated = "#8c8cd9", V1 = "#cc0044", V2 = "#999966")
 ## Three categories: Unvaccinated - Vaccinated 1x - Vaccinated 2x
 categories <- list(c("S", "Es", "Is", "R"), c("V1", "Ev1", "Iv1", "RV1"), 
                    c("V2", "Ev2", "Iv2", "RV2"))
-stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, 
-                dt_output = output_sim, cats = categories, colour = cols, 
+stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T, 
+                dt_output = output_sim, cats = categories, colour = cols, prop = T,
                 main_lab = NA, outer_y = T, y_lab = "Proportion of individuals", 
-                legend = T, prop = T)
+                names_reg = rownames(ref_d), names_age = rownames(ref_m))
 
 dev.off()
 
