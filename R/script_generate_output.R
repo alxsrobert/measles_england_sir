@@ -6,6 +6,7 @@ set.seed(1)
 #### Import libraries ####
 
 library(dplyr)
+library(socialmixr)
 library(odin.dust)
 library(mcstate)
 library(tictoc)
@@ -18,7 +19,7 @@ si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
 
 ## Define number of contacts
-beta <- 15
+beta <- 1.5
 
 ## Define vaccine efficacy
 # Against infection
@@ -29,7 +30,7 @@ vacc1 <- .7
 vacc2 <- .5
 
 ## Define spatial kernel parameter
-a <- 2.5
+a <- 3
 
 ## Define the seasonality parameters
 X <- .2
@@ -38,7 +39,7 @@ Y <- .4
 ## Define time step
 dt <- 1
 ## Define the number of particles (i.e. the number of stochastic runs)
-n_part <- 2
+n_part <- 10
 
 ## Duration of the run (in days)
 N_year <- 8
@@ -149,6 +150,7 @@ dev.off()
 
 ### Generate plot of the vaccine distribution per age group / region
 ### per region / age group
+message("Figures distribution vaccines")
 png(filename = paste0("Output/vaccine/fig_vaccine_import_age", lab_plot, ".png"), 
     width = 600, height = 800)
 par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
