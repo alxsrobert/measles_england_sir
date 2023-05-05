@@ -122,9 +122,9 @@ array_cov2 <- array(data = vacc_per_age$v2,
 
 ## 4 regions ; 3 age groups
 ## Define contact matrix
-ref_m <- matrix(, nrow = N_age, ncol = N_age)
-# The number of contacts between groups is smaller than within groups
-ref_m[] <- abs(rnorm(n = prod(dim(ref_m)), mean = .2, sd = .05))
-diag(ref_m)[] <- rnorm(n = nrow(ref_m), mean = .8, sd = .05)
+data(polymod)
+ref_m <- socialmixr::contact_matrix(polymod, countries = "United Kingdom", 
+                                    age.limits = cumsum(year_per_age) - year_per_age)$matrix
+# # The number of contacts between groups is smaller than within groups
 rownames(ref_m) <- colnames(ref_m) <- 
   paste(cumsum(year_per_age) - year_per_age, cumsum(year_per_age), sep = "-")
