@@ -92,11 +92,15 @@ for (t in seq_len(t_tot)) {
 }
 output_sim[grep("_reg1_", rownames(output_sim)), 1, 1:10]
 
-#### Generate plots stratified by age / region ####
+if(exists("year_start")){
+  output_sim["Time",,] <- as.Date(paste0(year_start, "-01-01")) + output_sim["Time",,] - 1
+}
+
+#### Number of cases per region ####
 
 source("R/function_figure.R")
-## Extract time and number of individuals per compartmemt
 
+## Extract time and number of individuals per compartmemt
 ## Extract the distribution of the population at the last time step
 final_res <- output_sim[, , dim(output_sim)[3]]
 
@@ -111,6 +115,20 @@ if(nrow(ref_d) > 3 | nrow(ref_m) > 3){
   n_col <- nrow(ref_d)
   lab_plot <- ""
 }
+
+par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
+## Define colour scheme
+cols <- c(Is = "#8c8cd9", Iv1 = "#cc0044", Iv2 = "#999966")
+## Three categories: New unvaccinated infected - new infected vaccinated 1x - new infected vaccinated 2x
+categories <- list("new_IS", "new_IV1", "new_IV2")
+stratified_plot(by_age = F, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T,  
+                dt_output = output_sim[,,], cats = categories, colour = cols, prop = F,  
+                main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
+                names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
+
+#### Generate plots stratified by age / region ####
+
 
 ### Generate plot of the number of Susceptibles, Infected and Recovered individuals through time
 ### per region / age group
