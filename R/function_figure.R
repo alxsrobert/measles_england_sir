@@ -119,3 +119,67 @@ plot_cats <- function(dt_output, labs_cats, colours, main_lab, y_lab, prop = FAL
   
 }
 
+proportion_outbreak <- function(dt_output, names_reg = NA, which_reg = NA){
+  
+  # Extract time from dt_output, use date if time does not start at 1
+  if(min(dt_output["Time",,]) != 1) {
+    time <- as.Date(dt_output["Time",1,], origin = "1970-01-01") 
+  } else
+    time <- dt_output["Time",1,]
+  
+  # Check whether stratified by region
+  if(!all(is.na(which_reg))){
+    for(i in which_reg){
+      # For each region, extract the rows with the number of new infected per day
+      rows_i <- c(grep(paste0("new_IS_reg", i), rownames(dt_output)),
+                  grep(paste0("new_IV1_reg", i), rownames(dt_output)),
+                  grep(paste0("new_IV2_reg", i), rownames(dt_output)))
+      # Aggregate the number of new cases and put it in a matrix called "new_cases"
+      if(!exists("new_cases")){
+        new_cases <- cbind(reg = i, iter = seq_len(ncol(dt_output)),
+                           dt_output[rows_i,,] %>% colSums())
+      } else {
+        new_cases <- rbind(new_cases, 
+                           cbind(reg = i, iter = seq_len(ncol(dt_output)), 
+                                 dt_output[rows_i,,] %>% colSums()))
+      }
+    }
+  } else{
+    ## If not region-stratified, extract all rows with the number of new infected
+    rows_new_cases <- rownames(dt_output)[grep("new_I", rownames(dt_output))]
+    ## Sum number of new infected per day
+    new_cases <- cbind.data.frame(reg = "National", iter = seq_len(ncol(dt_output)), 
+                                  dt_output[rows_new_cases,,] %>% colSums())
+  }
+  
+  ## Set column names
+  colnames(new_cases) <- c("reg", "iter", as.character(time))
+  
+  ## Change new_cases to long format (to then use ggplot) 
+  long_new_cases <- pivot_longer(as.data.frame(new_cases), 
+                                 cols = c(as.character(time)), 
+                                 names_to = "time",
+                                 values_to = "new_cases")
+  long_new_cases <- as.data.table(long_new_cases)
+  ## Aggregate by region / iteration / year
+  cases_per_year <- long_new_cases[, lapply(.SD, sum), by = .(iter, year(time), reg)]
+  ## Use region name
+  if(!all(cases_per_year$reg == "National"))
+    cases_per_year[, reg := factor(names_reg, levels = names_reg)[reg]]
+  
+  ## Aggregate number of annual cases into categories
+  vec_cut <- c(-1, 100, 250, 500, 1000, 2000)
+  cases_per_year[, cat_cases := cut(new_cases, vec_cut)]
+  
+  ## Change first and last categories to below / above threshold
+  cases_per_year[is.na(cat_cases), cat_cases := paste0(">= ", max(vec_cut))]
+  levels(cases_per_year$cat_cases)[1] <- paste0("< ", sort(vec_cut)[2])
+  cases_per_year[, cat_cases := factor(cat_cases, levels = rev(levels(cat_cases)))]
+  
+  ## Plot
+  ggplot(cases_per_year, aes(x = year, fill = cat_cases)) + 
+    geom_bar(position = "fill") + facet_wrap(.~reg) +
+    labs(x = "Year", y = "Proportion of Simulations", 
+         fill = "Number of Cases")
+  
+}

@@ -10,7 +10,9 @@ library(socialmixr)
 library(odin.dust)
 library(mcstate)
 library(tictoc)
-
+library(tidyr)
+library(ggplot2)
+library(data.table)
 
 #### Define model and variables ####
 
@@ -107,6 +109,11 @@ final_res <- output_sim[, , dim(output_sim)[3]]
 ## Compute the total number of cases per region across simulations
 print(summary(apply(output_sim[grep("new_I", rownames(final_res)), ,], 2, sum)))
 
+par(mfrow = c(1, 1), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
+proportion_outbreak(dt_output = output_sim, names_reg = rownames(ref_d), which_reg = NA)
+
+
 if(nrow(ref_d) > 3 | nrow(ref_m) > 3){
   n_row <- n_col <- 3
   lab_plot <- "%02d" 
@@ -115,6 +122,11 @@ if(nrow(ref_d) > 3 | nrow(ref_m) > 3){
   n_col <- nrow(ref_d)
   lab_plot <- ""
 }
+
+par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
+    oma = c(2, 2, 0, 2), las = 1, bty = "l") 
+proportion_outbreak(dt_output = output_sim, names_reg = rownames(ref_d),
+                    which_reg = seq_len(9))
 
 par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
     oma = c(2, 2, 0, 2), las = 1, bty = "l") 
