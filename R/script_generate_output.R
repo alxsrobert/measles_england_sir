@@ -21,7 +21,7 @@ si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
 
 ## Define number of contacts
-beta <- 1.5
+beta <- 1.75
 
 ## Define vaccine efficacy
 # Against infection
@@ -35,8 +35,8 @@ vacc2 <- .5
 a <- 3
 
 ## Define the seasonality parameters
-X <- .2
-Y <- .4
+X <- .3
+Y <- .02
 
 ## Define time step
 dt <- 1
@@ -44,7 +44,7 @@ dt <- 1
 n_part <- 10
 
 ## Duration of the run (in days)
-N_year <- 8
+N_year <- 13
 N_time <- t_tot <- 365 * N_year
 
 # source("R/parametrise_model_sim.R")
@@ -157,7 +157,7 @@ categories <- list(c("S", "V1", "V2"), c("IS", "Iv1", "Iv2"), c("R", "RV1", "RV2
 stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T,
                 dt_output = output_sim, cats = categories, colour = cols, prop = F,
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
-                names_reg = rownames(ref_d), names_age = rownames(ref_m))
+                names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
 
 dev.off()
 
@@ -174,7 +174,7 @@ categories <- list("new_IS", "new_IV1", "new_IV2")
 stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T,  
                 dt_output = output_sim, cats = categories, colour = cols, prop = F,  
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
-                names_reg = rownames(ref_d), names_age = rownames(ref_m))
+                names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
 
 dev.off()
 
@@ -192,7 +192,7 @@ categories <- list(c("S", "Es", "Is", "R"), c("V1", "Ev1", "Iv1", "RV1"),
 stratified_plot(by_age = T, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T, 
                 dt_output = output_sim, cats = categories, colour = cols, prop = T,
                 main_lab = NA, outer_y = T, y_lab = "Proportion of individuals", 
-                names_reg = rownames(ref_d), names_age = rownames(ref_m))
+                names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
 
 dev.off()
 
