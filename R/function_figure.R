@@ -100,8 +100,10 @@ plot_cats <- function(dt_output, labs_cats, colours, main_lab, y_lab, prop = FAL
           col = colours[[1]], lty = 1, ylim = c(0, ymax), main = main_lab)
   
   # Add the other categories to the plot
-  for(i in seq(2, length(cats))){
-    matlines(time, output_per_cat[[i]], col = colours[[i]], lty = 1)
+  if(length(cats) > 1){
+    for(i in seq(2, length(cats))){
+      matlines(time, output_per_cat[[i]], col = colours[[i]], lty = 1)
+    }
   }
   if(legend == T){
     ## Add the legend in the topleft panel
