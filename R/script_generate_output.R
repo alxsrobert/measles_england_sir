@@ -139,6 +139,10 @@ stratified_plot(by_age = F, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
                 names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
 
+stratified_plot(by_age = T, by_reg = F, N_reg = N_reg, N_age = N_age, legend = T,  
+                dt_output = output_sim[,,], cats = categories, colour = cols, prop = F,  
+                main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
+                names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
 #### Generate plots stratified by age / region ####
 
 
