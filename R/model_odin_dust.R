@@ -338,7 +338,13 @@ prop_v1v2[1:len_ageing,] <- if(iter == 1 || i == 1) 0 else if(iter <= 365)
     (array_cov2[i, j, iter] - array_cov2[i - 1, j, iter - 365]) / 
   (array_cov1[i - 1, j, iter - 365])
 
-prop_v1v2[,] <- if(prop_v1v2[i,j] < 0)  0 else if(prop_v1v2[i,j] > 1) 1 else prop_v1v2[i, j]
+prop_v1v2[1:len_ageing,] <- 
+  if(iter <= 365 && i >= 1 && array_cov1[i - 1, j, 1] == 0) 0 else 
+    if(iter > 365 && i >= 1 && array_cov1[i - 1, j, iter - 365] == 0) 0 else
+      prop_v1v2[i,j]
+
+prop_v1v2[,] <- if(prop_v1v2[i,j] < 0)  0 else if(prop_v1v2[i,j] > 1) 1 else 
+  prop_v1v2[i, j]
 dim(prop_v1v2) <- c(len_ageing, N_reg)
 # Draw the number of individuals gaining vaccination as they age
 n_V1V2[1 : len_ageing,] <- rbinom(n_V1[i, j], prop_v1v2[i, j])
