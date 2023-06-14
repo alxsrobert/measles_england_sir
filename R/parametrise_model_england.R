@@ -51,18 +51,18 @@ for(i in seq_len(nrow(dt_pop_select))){
 n_birth_per_year[is.na(n_birth_per_year[,1]),] <- n_birth_per_year[which(is.na(n_birth_per_year[,1])) - 1,]
 
 ## define when the simulation is starting
-year_start <- 2006
+year_start <- 2010
 
 #### Define initial number of cases in compartment
-if(year_start == 2006) N <- N_2006 else stop("Define N")
+if(year_start == 2006 || year_start == 2010) N <- N_2006 else stop("Define N")
 ## Define vaccine uptake and proportion of recovered at t = 0
 # In the first age group, everyone is susceptible
-# year_start is 2006, 11 age groups: 
-# - age0 and age1: born in 2006 everyone susceptible
-# - age2 to age4: born 2004-2002: 1 vaccine dose
-# - age5 to age 1620: born 2001-1985: 2 vaccine doses
-# - age2140: born 85-66: 
-# - age40plot: born before 66: Full recovered
+# year_start is 2010, 11 age groups: 
+# - age0 and age1: born in 2010 everyone susceptible
+# - age2 to age4: born 2008-2006: 1 vaccine dose
+# - age5 to age 1620: born 2005-1990: 2 vaccine doses => Drop in coverage
+# - age2140: born 90-70: ?
+# - age40plot: born before 70: Full recovered
 
 # source: Measles in the United Kingdom 1990-2008 and the effectiveness of measles vaccines
 #  "we estimate that, in 1994, 65% of children age 1–2 years had been vaccinated 
