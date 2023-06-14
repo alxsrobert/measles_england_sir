@@ -133,6 +133,8 @@ update(RV2[N_age,]) <- RV2[N_age, j] +                 # Initial
 update(new_IS[, ]) <- n_EsIs[i, j]
 update(new_IV1[, ]) <- n_Ev1Iv1[i, j]
 update(new_IV2[, ]) <- n_Ev12v2[i, j]
+update(new_Iv1_tot) <- sum(n_Ev1Iv1[, ])
+update(new_Iv2_tot) <- sum(n_Ev12v2[, ])
 
 #### 2- Compute "n_" variables: the number of individuals changing between compartments (infection!) ####
 ## Draw from binomial distributions: 
@@ -187,7 +189,7 @@ Y <- user(1)
 lambda[,] <- beta * cases_ij[i, j] / N
 
 ## Default values of beta (average number of contacts)
-beta <- user(1.8)
+beta <- user()
 ## Total population size
 N <- sum(S[,]) + sum(V1[,]) + sum(V2[,]) + sum(Es[,]) + sum(Ev1[,]) + sum(Ev2[,]) + 
   sum(Is[,]) + sum(Iv1[,]) + sum(Iv2[,]) + sum(R[,]) + sum(RV1[,]) + sum(RV2[,])
@@ -253,7 +255,8 @@ N_time <- user(2)
 #### 6- Compute ageing ####
 
 ## Draw number of new susceptibles (births)
-new_birth[] <- rpois(array_new[i, iter])
+new_birth[] <- #rpois(
+  array_new[i, iter]#)
 array_new[,] <- user()
 dim(array_new) <- c(N_reg, N_time)
 dim(new_birth) <- c(N_reg)
@@ -292,12 +295,18 @@ mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (RV2[i, j]/(pop_
 
 
 ## Compute overall number of movements between compartments using a poisson distribution
-n_S[,] <- rpois(mean_S[i, j])
-n_V1[,] <- rpois(mean_V1[i, j])
-n_V2V2[,] <- rpois(mean_V2[i, j])
-n_R[,] <- rpois(mean_R[i, j])
-n_RV1[,] <- rpois(mean_RV1[i, j])
-n_RV2RV2[,] <- rpois(mean_RV2[i, j])
+n_S[,] <- #rpois(
+  mean_S[i, j]#)
+n_V1[,] <- #rpois(
+  mean_V1[i, j]#)
+n_V2V2[,] <- #rpois(
+  mean_V2[i, j]#)
+n_R[,] <- #rpois(
+  mean_R[i, j]#)
+n_RV1[,] <- #rpois(
+  mean_RV1[i, j]#)
+n_RV2RV2[,] <- #rpois(
+  mean_RV2[i, j]#)
 len_ageing <- N_age - 1
 
 # If number of people ageing is above the number of people left in the compartment, set it 
@@ -376,6 +385,8 @@ initial(RV2[,]) <- RV2_init[i, j]
 initial(new_IS[, ]) <- 0
 initial(new_IV1[, ]) <- 0
 initial(new_IV2[, ]) <- 0
+initial(new_Iv1_tot) <- 0
+initial(new_Iv2_tot) <- 0
 
 ## Default values
 S_ini[,] <- user(100)
