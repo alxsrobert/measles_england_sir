@@ -1,7 +1,9 @@
-set.seed(1)
+set.seed(3)
 ## Script:
 ## Import odin.dust model, define model variables, run model, plot outputs
-
+scenario <- "reference"
+# scenario <- "early"
+# scenario <- "early_timely"
 
 #### Import libraries ####
 
@@ -19,32 +21,32 @@ library(data.table)
 ## Import odin.dust model
 si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
 
-
 ## Define number of contacts
-beta <- 1.75
+beta <- 1.8519
 
 ## Define vaccine efficacy
 # Against infection
-v1 <- .5
-v2 <- .01
+v1 <- .0277
+v2 <- .4885 / 1000
+
 # Against onwards infection
-vacc1 <- .7
-vacc2 <- .5
+vacc1 <- 4.9424/100
+vacc2 <- 1.0530/100
 
 ## Define spatial kernel parameter
-a <- 3
+a <- 1.2338
 
 ## Define the seasonality parameters
-X <- .3
-Y <- .02
+X <- .1999
+Y <- .1272
 
 ## Define time step
 dt <- 1
 ## Define the number of particles (i.e. the number of stochastic runs)
-n_part <- 10
+n_part <- 100
 
 ## Duration of the run (in days)
-N_year <- 13
+N_year <- 10
 N_time <- t_tot <- 365 * N_year
 
 # source("R/parametrise_model_sim.R")
@@ -92,7 +94,6 @@ rownames(output_sim) <- c("Time", "iter", "new_IV1_tot", "new_IV2_tot",
 for (t in seq_len(t_tot)) {
   output_sim[ , , t] <- seir_model$run(t)
 }
-output_sim[grep("_reg1_", rownames(output_sim)), 1, 1:10]
 
 if(exists("year_start")){
   output_sim["Time",,] <- as.Date(paste0(year_start, "-01-01")) + output_sim["Time",,] - 1
@@ -111,8 +112,7 @@ print(summary(apply(output_sim[grep("new_I", rownames(final_res)), ,], 2, sum)))
 
 par(mfrow = c(1, 1), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
     oma = c(2, 2, 0, 2), las = 1, bty = "l") 
-proportion_outbreak(dt_output = output_sim, names_reg = rownames(ref_d), which_reg = NA)
-
+proportion_outbreak(dt_output = output_sim, names_reg = rownames(ref_d), which_reg = NA) %>% print
 
 if(nrow(ref_d) > 3 | nrow(ref_m) > 3){
   n_row <- n_col <- 3
@@ -127,7 +127,6 @@ par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0),
     oma = c(2, 2, 0, 2), las = 1, bty = "l") 
 proportion_outbreak(dt_output = output_sim, names_reg = rownames(ref_d),
                     which_reg = seq_len(9))
-
 par(mfrow = c(n_row, n_col), mar = c(3, 4, 2, 0.5), mar = c(3, 4, 1, 0), 
     oma = c(2, 2, 0, 2), las = 1, bty = "l") 
 ## Define colour scheme
@@ -138,11 +137,11 @@ stratified_plot(by_age = F, by_reg = T, N_reg = N_reg, N_age = N_age, legend = T
                 dt_output = output_sim[,,], cats = categories, colour = cols, prop = F,  
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
                 names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
-
 stratified_plot(by_age = T, by_reg = F, N_reg = N_reg, N_age = N_age, legend = T,  
                 dt_output = output_sim[,,], cats = categories, colour = cols, prop = F,  
                 main_lab = NA, outer_y = T, y_lab = "Number of individuals", 
                 names_reg = rownames(ref_d), names_age = rownames(ref_m), aggreg = "week")
+
 #### Generate plots stratified by age / region ####
 
 

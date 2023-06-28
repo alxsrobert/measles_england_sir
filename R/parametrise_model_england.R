@@ -68,18 +68,28 @@ if(year_start == 2006 || year_start == 2010) N <- N_2006 else stop("Define N")
 #  "we estimate that, in 1994, 65% of children age 1–2 years had been vaccinated 
 # with the MMR vaccine, 87% of # children age 3–4 years had been vaccinated, 77% 
 # of children age 5–9 years had been vaccinated, and 28% of those aged 10–19 years"
-# yob:       2006,05, 2004, 2003, 2002, 2001,00-96, 95-91,90-86,85-66, 1965)   
-mean_recov <- c(0, 0, .006, .01,  .013, .02,  .2,    .4,     .999,  .999, .999)
-mean_cov1 <-  c(0, 0, .876, .852, .828, .100, .1,     0,      0,    0,  0)
-mean_cov2 <-  c(0, 0,  0,   0,    0,    .756, .8,    .9,     .9,  .99,  0) # Proportion of the susceptible vaccinated
-recov <- matrix(rbeta(shape1 = mean_recov * 200, shape2 = 200 - mean_recov * 200, 
-                      n = N_reg * N_age), 
-                ncol = N_reg, byrow = F)
-cov1 <- matrix(rbeta(shape1 = mean_cov1 * 200, shape2 = 200 - mean_cov1 * 200, 
-                     n = N_reg * N_age), ncol = N_reg)
+# yob:       2010,   09, 2008, 2007, 2006, 2005,04-00, 99-96,95-91,90-70, 1970)   
+# mean_recov <- c(0, .001, .005, .01,  .015,  .02,  .1,    .0135,  .0135,   .599, .997)
+mean_recov <- c(0, .1/1000, .1/1000, .1/1000,  .1/1000,  .2/1000,
+                # 04-00,      99-96,       95-91,  90-70, 1970)
+                .2/1000, .3803/1000,  .3803/1000,   .6209, .997)
+mean_cov1 <-  c(0,   .6,  .91, .95,   .07,  .07,  .1,      0,    0,    0,  0)
+mean_cov2 <-  c(0,    0,    0,   0,   .88,  .87,  .8,     .99,   .99,   .7683,  0) 
 
-cov2 <- matrix(rbeta(shape1 = mean_cov2 * 200, shape2 = 200 - mean_cov2 * 200, 
-                     n = N_reg * N_age), ncol = N_reg)
+# Proportion of the susceptible vaccinated
+recov <- matrix(mean_recov,
+  # rbeta(shape1 = mean_recov * 10000, shape2 = 10000 - mean_recov * 10000, 
+        # n = N_reg * N_age), 
+  ncol = N_reg, nrow = 11, byrow = F)
+cov1 <- matrix(mean_cov1,
+  # rbeta(shape1 = mean_cov1 * 10000, shape2 = 10000 - mean_cov1 * 10000, 
+        # n = N_reg * N_age), 
+  ncol = N_reg, nrow = 11)
+
+cov2 <- matrix(mean_cov2,
+  # rbeta(shape1 = mean_cov2 * 10000, shape2 = 10000 - mean_cov2 * 10000, 
+        # n = N_reg * N_age), 
+  ncol = N_reg, nrow = 11)
 unvax <- 1 - cov1 - cov2
 if(any(unvax > 1 | unvax < 0)) stop("Proportion should be between 0 and 1")
 
@@ -104,16 +114,28 @@ dt_vacc[, id := paste(year, tolower(region), dose, age, sep = "_")]
 colnames(dt_vacc) <- c("years", "region", "vac_code", "coverage", "yob", "dose",
                        "age", "id")
 setkey(dt_vacc, id)
-
-vacc_per_age[age %in% c("age0", "age1"), v1 := 0]
-vacc_per_age[age %in% c("age0", "age1", "age2", "age3", "age4"), v2 := 0]
-
-vacc_per_age[age == "age2", v1 := dt_vacc[paste(year, tolower(regions), 1, 2, sep = "_"), coverage]]
-vacc_per_age[age == "age5", v1 := dt_vacc[paste(year, tolower(regions), 1, 5, sep = "_"), coverage]]
-vacc_per_age[age == "age5", v2 := dt_vacc[paste(year, tolower(regions), 2, 5, sep = "_"), coverage]]
-
-vacc_per_age[age == "age3", v1 := dt_vacc[paste(year - 1, tolower(regions), 1, 2, sep = "_"), coverage]]
-vacc_per_age[age == "age4", v1 := dt_vacc[paste(year - 2, tolower(regions), 1, 2, sep = "_"), coverage]]
+if(all(dt_vacc$age %in% c(2, 5))){
+  vacc_per_age[age %in% c("age0", "age1"), v1 := 0]
+  vacc_per_age[age %in% c("age0", "age1", "age2", "age3", "age4"), v2 := 0]
+  
+  vacc_per_age[age == "age2", v1 := dt_vacc[paste(year, tolower(regions), 1, 2, sep = "_"), coverage]]
+  vacc_per_age[age == "age5", v1 := dt_vacc[paste(year, tolower(regions), 1, 5, sep = "_"), coverage]]
+  vacc_per_age[age == "age5", v2 := dt_vacc[paste(year, tolower(regions), 2, 5, sep = "_"), coverage]]
+  
+  vacc_per_age[age == "age3", v1 := dt_vacc[paste(year - 1, tolower(regions), 1, 2, sep = "_"), coverage]]
+  vacc_per_age[age == "age4", v1 := dt_vacc[paste(year - 2, tolower(regions), 1, 2, sep = "_"), coverage]]
+} else {
+  vacc_per_age[, agegroup := substr(age, 4, 5)]
+  vacc_per_age[age == "age0", v1 := 0]
+  vacc_per_age[age == "age0", v2 := 0]
+  vacc_per_age[age %in% c("age1", "age2", "age3", "age4", "age5"),
+               v1 := dt_vacc[paste(year, tolower(regions), 1, 
+                                   agegroup, sep = "_"), coverage]]
+  vacc_per_age[age %in% c("age1", "age2", "age3", "age4", "age5"),
+               v2 := dt_vacc[paste(year, tolower(regions), 2, 
+                                   agegroup, sep = "_"), coverage]]
+  vacc_per_age[, agegroup := NULL]
+}
 vacc_per_age[age == "age6to9", v1 := dt_vacc[paste(year - 2, tolower(regions), 1, 5, sep = "_"), coverage]]
 vacc_per_age[age == "age6to9", v2 := dt_vacc[paste(year - 2, tolower(regions), 2, 5, sep = "_"), coverage]]
 vacc_per_age[age == "age11to15", v1 := dt_vacc[paste(year - 7, tolower(regions), 1, 5, sep = "_"), coverage]]
@@ -167,7 +189,10 @@ for(i in seq_along(mean_import_per_reg)){
   # Mean number of import by day
   mean_import_i <- mean_import_per_reg[i] * seas / sum(seas[1:365])
   # Draw the number of importations (by age, region, and day)
-  import[,i,] <- round(rpois(n = t_tot * nrow(ref_m),
-                             rep(mean_import_i, each = nrow(ref_m))))
+  import[,i,] <- round(
+    rpois(
+      n = t_tot * nrow(ref_m),
+      rep(mean_import_i, each = nrow(ref_m))
+    ))
 }
 
