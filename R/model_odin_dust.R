@@ -177,8 +177,7 @@ v2 <- user(.1)
 
 #### 4- Compute lambda_t, the force of infection including the impact of seasonality ####
 
-lambda_t[,] <- lambda[i,j] * 
-  exp(X * cos(2 * 3.14 * time / 365) + Y * sin(2 * 3.14 * time / 365))
+lambda_t[,] <- lambda[i,j] * (1 + X * cos(2 * 3.14159 * time / 365 + Y))
 # Default values of X and Y (seasonnality parameters)
 X <- user(1)
 Y <- user(1)
