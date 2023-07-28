@@ -39,6 +39,9 @@ a <- 1.2338
 ## Define the seasonality parameters
 X <- .1999
 Y <- .1272
+X_import <- .9836
+Y_import <- 6.1404
+report_import <- 1
 
 ## Define time step
 dt <- 1
@@ -58,9 +61,11 @@ source("R/parametrise_model_england.R")
 seir_model <- si_age$new(pars = list(m = ref_m, d = 1/ref_d, a = a, 
                                      beta = beta, X = X, Y = Y,
                                      
+                                     X_import = X_import, Y_import = Y_import,
+                                     
                                      v1 = v1, v2 = v2, vacc1 = vacc1, vacc2 = vacc2, 
                                      
-                                     import = import, 
+                                     mean_import = mean_import_per_reg / report_import, 
                                      
                                      N_time = N_time, N_age = N_age, N_reg = N_reg, 
                                      

@@ -236,7 +236,12 @@ vacc2 <- user(.1)
 #### 5- Compute the number of importations ####
 
 ### Extract the number of importation per age / region at time (step + 1)
-import_t[,] <- import[i, j, iter]
+import_t[,] <- rpois(
+  mean_import[j] * (11 * N_strat[i,j])/sum(N_strat[,j]) *
+  (1 + X_import * cos(2 * 3.14159 * time / 365 + Y_import))
+)
+X_import <- user()
+Y_import <- user()
 
 ## Define time step
 dt <- user(1)
@@ -246,8 +251,8 @@ initial(iter) <- 1
 update(iter) <- step + 1
 
 ## Initialise the number of importations / dimensions of the matrices
-import[,,] <- user()
-dim(import) <- c(N_age, N_reg, N_time)
+mean_import[] <- user()
+dim(mean_import) <- c(N_reg)
 dim(import_t) <- c(N_age, N_reg)
 N_time <- user(2)
 
