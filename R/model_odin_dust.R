@@ -259,8 +259,8 @@ N_time <- user(2)
 #### 6- Compute ageing ####
 
 ## Draw number of new susceptibles (births)
-new_birth[] <- #rpois(
-  array_new[i, iter]#)
+new_birth[] <- rpois(
+  array_new[i, iter])
 array_new[,] <- user()
 dim(array_new) <- c(N_reg, N_time)
 dim(new_birth) <- c(N_reg)
@@ -299,18 +299,18 @@ mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (RV2[i, j]/(pop_
 
 
 ## Compute overall number of movements between compartments using a poisson distribution
-n_S[,] <- #rpois(
-  mean_S[i, j]#)
-n_V1[,] <- #rpois(
-  mean_V1[i, j]#)
-n_V2V2[,] <- #rpois(
-  mean_V2[i, j]#)
-n_R[,] <- #rpois(
-  mean_R[i, j]#)
-n_RV1[,] <- #rpois(
-  mean_RV1[i, j]#)
-n_RV2RV2[,] <- #rpois(
-  mean_RV2[i, j]#)
+n_S[,] <- rpois(
+  mean_S[i, j])
+n_V1[,] <- rpois(
+  mean_V1[i, j])
+n_V2V2[,] <- rpois(
+  mean_V2[i, j])
+n_R[,] <- rpois(
+  mean_R[i, j])
+n_RV1[,] <- rpois(
+  mean_RV1[i, j])
+n_RV2RV2[,] <- rpois(
+  mean_RV2[i, j])
 len_ageing <- N_age - 1
 
 # If number of people ageing is above the number of people left in the compartment, set it 
