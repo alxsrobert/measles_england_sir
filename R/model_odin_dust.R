@@ -192,6 +192,9 @@ beta <- user()
 ## Total population size
 N <- sum(S[,]) + sum(V1[,]) + sum(V2[,]) + sum(Es[,]) + sum(Ev1[,]) + sum(Ev2[,]) + 
   sum(Is[,]) + sum(Iv1[,]) + sum(Iv2[,]) + sum(R[,]) + sum(RV1[,]) + sum(RV2[,])
+N_strat[,] <- S[i,j] + V1[i,j] + V2[i,j] + Es[i,j] + Ev1[i,j] + Ev2[i,j] + 
+  Is[i,j] + Iv1[i,j] + Iv2[i,j] + R[i,j] + RV1[i,j] + RV2[i,j]
+dim(N_strat) <- c(N_age, N_reg)
 
 ## Compute the potential of infection given the current number of infectious cases
 ## in each age group / region. Transmission from cases A (age i, region j) to 
@@ -199,15 +202,15 @@ N <- sum(S[,]) + sum(V1[,]) + sum(V2[,]) + sum(Es[,]) + sum(Ev1[,]) + sum(Ev2[,]
 ## with m the age contact matrix, d the distance matrix, and a the spatial kernel parameter
 ## Therefore, we compute cases_ijkl (the number of connection from [i,j] to [k,l])
 cases_ijkl[, , , ] <- m[i, k] * d_a[j, l] *
-  (Is[k, l] + vacc1 * Iv1[k, l] + vacc2 * Iv2[k, l])
+  (Is[i, j] + vacc1 * Iv1[i, j] + vacc2 * Iv2[i, j])
+
 ## with vacc1/ vacc2: protection from onwards transmission brought by vaccination 
-## and d_a the distance matrix after applying the spatial kernel
-d_a[,] <- (d[i, j]^(a))
+## and d_a the distance matrix after applying the spatial kernel (as a rate)
+d_a[,] <- (1e6 * exp(-a * (d[i, j] - 1))) / sum(N_strat[,j])
 
 ## We sum over k and l to get the total potential for transmission towards individuals 
-## in (i,j)
-cases_ijk[, , ] <- sum(cases_ijkl[i, j, k, ])
-cases_ij[, ] <- sum(cases_ijk[i, j, ])
+## in (i,j) 
+cases_ij[, ] <- sum(cases_ijkl[, , i, j])
 
 # Dimension of the transmission matrices
 dim(cases_ijkl) <- c(N_age, N_reg, N_age, N_reg)
@@ -227,8 +230,8 @@ d[, ] <- user() # No default value, has to be defined by the user
 a <- user(2)
 N_age <- user(2)
 N_reg <- user(2)
-vacc1 <- user(.5)
-vacc2 <- user(.1)
+vacc1 <- user(1)
+vacc2 <- user(1)
 
 
 
