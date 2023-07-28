@@ -214,7 +214,6 @@ cases_ij[, ] <- sum(cases_ijkl[, , i, j])
 
 # Dimension of the transmission matrices
 dim(cases_ijkl) <- c(N_age, N_reg, N_age, N_reg)
-dim(cases_ijk) <- c(N_age, N_reg, N_age)
 dim(cases_ij) <- c(N_age, N_reg)
 # Dimension of the force of infection matrices
 dim(lambda) <- c(N_age, N_reg)
