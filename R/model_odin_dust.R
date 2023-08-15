@@ -327,6 +327,8 @@ mean_R[,] <- if(pop_per_age_s[i, j] > 0) N_ageing_S[i, j] * (R[i, j]/(pop_per_ag
 mean_RV1[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (RV1[i, j]/(pop_per_age_v1[i, j])) else 0
 mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (RV2[i, j]/(pop_per_age_v2[i, j])) else 0
 
+mean_V1p[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (V1p[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_V2p[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (V2p[i, j]/(pop_per_age_v2[i, j])) else 0
 
 ## Compute overall number of movements between compartments using a poisson distribution
 n_S[,] <- rpois(
@@ -341,6 +343,12 @@ n_RV1[,] <- rpois(
   mean_RV1[i, j])
 n_RV2RV2[,] <- rpois(
   mean_RV2[i, j])
+
+n_V1p[,] <- rpois(
+  mean_V1p[i, j])
+n_V2pV2p[,] <- rpois(
+  mean_V2p[i, j])
+
 len_ageing <- N_age - 1
 
 # If number of people ageing is above the number of people left in the compartment, set it 
@@ -353,6 +361,9 @@ n_V2V2[,] <- if(n_V2V2[i,j] > (V2[i, j] - n_v2E[i, j])) (V2[i, j] - n_v2E[i, j])
 n_R[,] <- if(n_R[i,j] > (R[i, j] + n_IsR[i, j])) (R[i, j] + n_IsR[i, j]) else n_R[i,j]
 n_RV1[,] <- if(n_RV1[i,j] > (RV1[i, j] + n_Iv1R[i, j])) (RV1[i, j] + n_Iv1R[i, j]) else n_RV1[i,j]
 n_RV2RV2[,] <- if(n_RV2RV2[i,j] > (RV2[i, j] + n_Iv2R[i, j])) (RV2[i, j] + n_Iv2R[i, j]) else n_RV2RV2[i,j]
+
+n_V1p[,] <- if(n_V1p[i,j] > V1p[i, j]) (V1p[i, j]) else n_V1p[i,j]
+n_V2pV2p[,] <- if(n_V2pV2p[i,j] > V2p[i, j]) (V2p[i, j]) else n_V2pV2p[i,j]
 
 ## Compute the proportion of individuals that get vaccinated as they age
 # number of people in S who move to V1 = (1 - susceptible who do not get vaccinated)
