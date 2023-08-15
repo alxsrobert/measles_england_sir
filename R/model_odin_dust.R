@@ -266,10 +266,19 @@ vacc <- user(1)
 #### 5- Compute the number of importations ####
 
 ### Extract the number of importation per age / region at time (step + 1)
-import_t[,] <- rpois(
-  mean_import[j] * (11 * N_strat[i,j])/sum(N_strat[,j]) *
-  (1 + X_import * cos(2 * 3.14159 * time / 365 + Y_import))
-)
+mean_import_reg <- sum(mean_import[])
+N_susc[] <- sum(S[,i]) + sum(V1[,i]) + sum(V2[,i])
+dim(N_susc) <- N_reg
+
+import_t[,] <- if(import_vax == 1)
+  rpois(mean_import_reg * (N_susc[j] / sum(N_susc[])) * (11 * N_strat[i,j])/sum(N_strat[,j]) *
+          (1 + X_import * cos(2 * 3.14159 * time / 365 + Y_import))) else
+  rpois(
+    mean_import[j] * (11 * N_strat[i,j])/sum(N_strat[,j]) *
+      (1 + X_import * cos(2 * 3.14159 * time / 365 + Y_import))
+  )
+
+import_vax <- user()
 X_import <- user()
 Y_import <- user()
 
