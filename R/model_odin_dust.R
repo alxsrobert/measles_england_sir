@@ -83,7 +83,8 @@ update(V1p[N_age,]) <- V1p[N_age, j] +                                         #
 update(V2p[N_age,]) <- V2p[N_age, j] +                                         # Initial
   n_V2pV2p[len_ageing, j] + n_V1V2p[len_ageing, j] +n_V1pV2p[len_ageing, j]    # Ageing in
 
-## Exposed compartments: No Aging
+
+## Exposed compartments: No ageing
 # New value of ES, EV1, and EV2 is: 
 #   (old value) + (new_exposed) - (nb of exposed individuals moving to infectious)
 update(Es[,]) <-  Es[i, j] +   # Initial
@@ -96,7 +97,7 @@ update(Ev2[,]) <- Ev2[i, j] +  # Initial
   n_v2E[i, j] -                # New exposed
   n_Ev12v2[i, j]               # Moving to infected
 
-## Infected compartments: No Aging
+## Infected compartments: No ageing
 # New value of IS is:
 #   (old value) + (new_infected) + (new_imports) - (nb of infectious moving to recovered)
 # import_t corresponds to the number of new imports in this region / age group
@@ -156,7 +157,7 @@ update(new_IV2[, ]) <- n_Ev12v2[i, j]
 update(new_Iv1_tot) <- sum(n_Ev1Iv1[, ])
 update(new_Iv2_tot) <- sum(n_Ev12v2[, ])
 
-#### 2- Compute "n_" variables: the number of individuals changing between compartments (infection!) ####
+#### 2- Compute the number of individuals changing between compartments via infection ####
 ## Draw from binomial distributions: 
 # Depends on the number of individuals in the compartment and the probability of moving
 n_SEs[,] <- rbinom(S[i, j], p_SE[i, j])
@@ -182,6 +183,7 @@ p_SE[,] <- 1 - exp(-lambda_t[i, j] * dt) # S to E
 ## brought by the vaccine 
 p_SEv1[,] <- 1 - exp(-lambda_t[i, j] * v1 * dt) # V1 to Ev1
 p_SEv2[,] <- 1 - exp(-lambda_t[i, j] * v2 * dt) # V2 to Ev2
+## From M to S depends on the duration of the maternal immunity
 p_MS[] <- 1 - exp(-delta * dt)
 ## From E to I depends on the duration of the latent period
 p_EI <- 1 - exp(-alpha * dt) # E to I
@@ -202,7 +204,7 @@ v_fail <- user(.02)
 #### 4- Compute lambda_t, the force of infection including the impact of seasonality ####
 
 lambda_t[,] <- lambda[i,j] * (1 + X * cos(2 * 3.14159 * time / 365 + Y))
-# Default values of X and Y (seasonnality parameters)
+# Default values of X and Y (seasonality parameters)
 X <- user(1)
 Y <- user(1)
 
