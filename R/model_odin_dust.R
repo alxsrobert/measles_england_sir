@@ -233,8 +233,10 @@ cases_ijkl[, , , ] <- m[i, k] * d_a[j, l] *
 
 ## with vacc: protection from onwards transmission brought by vaccination 
 ## and d_a the distance matrix after applying the spatial kernel (as a rate)
-d_a[,] <- (1e6 * exp(-a * (d[i, j] - 1))) / sum(N_strat[,j])
-
+d_a[,] <- if(i == j) 1 else 
+  (sum(N_strat[,j])^b) * (theta * ((d[i, j] - 1 )^(-a)) * sum(N_strat[,i])^c) / sum(N_strat[,i])
+theta <- user()
+c <- user()
 ## We sum over k and l to get the total potential for transmission towards individuals 
 ## in (i,j) 
 cases_ij[, ] <- sum(cases_ijkl[, , i, j])
@@ -254,6 +256,7 @@ dim(d) <- c(N_reg, N_reg)
 m[, ] <- user() # No default value, has to be defined by the user
 d[, ] <- user() # No default value, has to be defined by the user
 a <- user(2)
+b <- user(0)
 N_age <- user(2)
 N_reg <- user(2)
 vacc <- user(1)
