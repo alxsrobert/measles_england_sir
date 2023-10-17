@@ -58,7 +58,6 @@ plot_cats <- function(dt_output, labs_cats, colours, main_lab, y_lab, prop = FAL
   time <- dt_output[1, 1, ]
   output <- dt_output[-1, , ]
   if(min(time) != 1) time <- as.Date(time, origin = "1970-01-01")
-  
   # Create cats: which rows correspond to labs_cats
   cats <- list()
   for(i in seq_along(labs_cats)){
@@ -97,7 +96,8 @@ plot_cats <- function(dt_output, labs_cats, colours, main_lab, y_lab, prop = FAL
   }
   # Plot the first category
   matplot(time, output_per_cat[[1]], type = "l", xlab = "", ylab = "", yaxt="none", 
-          col = colours[[1]], lty = 1, ylim = c(0, ymax), main = main_lab)
+          col = colours[[1]], lty = 1, ylim = c(0, ymax), 
+          main = main_lab)
   
   # Add the other categories to the plot
   if(length(cats) > 1){
@@ -122,7 +122,6 @@ plot_cats <- function(dt_output, labs_cats, colours, main_lab, y_lab, prop = FAL
 }
 
 proportion_outbreak <- function(dt_output, names_reg = NA, which_reg = NA){
-  
   # Extract time from dt_output, use date if time does not start at 1
   if(min(dt_output["Time",,]) != 1) {
     time <- as.Date(dt_output["Time",1,], origin = "1970-01-01") 
@@ -182,6 +181,6 @@ proportion_outbreak <- function(dt_output, names_reg = NA, which_reg = NA){
   ggplot(cases_per_year, aes(x = year, fill = cat_cases)) + 
     geom_bar(position = "fill") + facet_wrap(.~reg) +
     labs(x = "Year", y = "Proportion of Simulations", 
-         fill = "Number of Cases")
+         fill = "Number of Cases") + theme_bw()
   
 }
