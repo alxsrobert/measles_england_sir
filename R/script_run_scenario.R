@@ -20,6 +20,7 @@ library(data.table)
 scenario <- "reference"
 # Number of simulations per sample
 n_part <- 10
+n_samples <- 10
 
 #### Import data and model fit ####
 
