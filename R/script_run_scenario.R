@@ -38,7 +38,7 @@ regions <- c("North East", "North West", "Yorkshire and The Humber", "East Midla
 ## Import the different data streams into a list.
 # Use scenario to move between vaccine scenarios (early / early_timely etc..)
 all_data <- import_all_data(year_start = year_start, N_year = N_year, 
-                            scenario = scenario, vax = vax, regions = regions, 
+                            scenario = scenario, vax = "cprd", regions = regions, 
                             age = age)
 
 
@@ -69,9 +69,9 @@ all_output["Time",,] <- as.Date(paste0(year_start, "-01-01")) + all_output["Time
 ## Generate n_part simulation per sampled parameter estimate
 for(k in seq_len(nrow(samples))){
   all_output[, seq((k-1) * n_part + 1, (k) * n_part),] <- 
-    generate_outbreaks_1sample(sample = samples[k,], model = si_age, pars = all_data,
+    generate_outbreaks_1sample(sample = samples[k,], model = si_age, data = all_data,
                                states = rownames(all_output), n_part = n_part, 
-                               waning = waning, scenario_import = scenario_import, 
+                               waning = "no", scenario_import = "per_year", 
                                year_start = year_start, N_year = N_year)
 }
 
@@ -79,3 +79,5 @@ for(k in seq_len(nrow(samples))){
 
 #### Analysis of all_output ####
 
+# Total number of cases per simulation:
+print(summary(apply(all_output[grep("new_I", rownames(all_output)), ,], 2, sum)))
