@@ -307,10 +307,10 @@ compute_contact_matrix <- function(year_per_age){
   return(ref_m)
 }
 
-compute_importation <- function(regions, N_age){
+compute_importation <- function(regions, N_age, scenario_import = "per_year"){
   ## Define number of import per day
   if(scenario_import == "pop"){
-    mean_import_per_reg <- sum(c(1.6, 3.2, 3.0, 2.0, 2.3, 3.2, 20.1, 7.6, 3.2)) / 365.25 /  nrow(ref_m) *
+    mean_import_per_reg <- sum(c(1.6, 3.2, 3.0, 2.0, 2.3, 3.2, 20.1, 7.6, 3.2)) / 365.25 /  N_age *
       colSums(N) / sum(N)
   } else if(scenario_import == "per_year"){ 
     mean_import_per_reg <- matrix(c(4, 2, 2,  1, 1, 4, 9,  10, 2,
