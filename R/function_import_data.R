@@ -65,6 +65,8 @@ import_ehr_vaccine <- function(vax, scenario){
   
   ## Coverage at 1 is 75% of coverage at 2
   dt_vacc[age == 1 & dose == 1, coverage := dt_vacc[age == 2 & dose == 1, coverage] * .75]
+  ## Second dose coverage
+  dt_vacc[age == 3 & dose == 2, coverage := dt_vacc[age == 4 & dose == 2, coverage] * .5]
   dt_vacc[region == "EAST OF ENGLAND", region := "EAST"]
   dt_vacc[, id := paste(year, tolower(region), dose, age, sep = "_")]
   colnames(dt_vacc) <- c("years", "region", "vac_code", "coverage", "yob", "dose",
