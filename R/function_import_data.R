@@ -77,7 +77,7 @@ import_ehr_vaccine <- function(vax, scenario){
 }
 
 # Import number of births
-compute_n_birth <- function(){
+compute_n_birth <- function(year_start){
   ## Import population data
   dt_pop_all <- read.csv2("Data/regional_population.csv", row.names = 1)
   
@@ -352,7 +352,7 @@ import_all_data <- function(year_start, N_year, scenario, vax, regions, age){
   colnames(ref_d) <- rownames(ref_d) <- regions
   
   ## compute the number of births per year
-  new_birth <- compute_n_birth()
+  new_birth <- compute_n_birth(year_start)
   
   ## Compute initial state
   list_state <- compute_initial_state(
