@@ -203,14 +203,14 @@ compute_initial_state <- function(vax, scenario, N_age, regions, N){
 }
 
 ## Compute vaccine coverage at each year
-compute_vax_cov <- function(reg_names, age_names, year_start, N_year, N_age,
+compute_vax_cov <- function(age_names, year_start, N_year, N_age,
                             regions, vax, scenario){
   # Compute the number of regions
   N_reg <- length(regions)
   # Import vaccine coverage
   dt_vacc <- import_ehr_vaccine(vax, scenario)
   # Create empty data table to compute the vaccine coverage per region / age / year
-  vacc_per_age <- data.table(regions = rep(reg_names, N_age * N_year), 
+  vacc_per_age <- data.table(regions = rep(toupper(regions), N_age * N_year), 
                              age = rep(rep(age_names, each = N_reg), N_year),
                              year = rep(year_start + 0:(N_year - 1), each = N_age * N_reg))
   if(all(dt_vacc$age %in% c(2, 5))){
@@ -251,8 +251,8 @@ compute_vax_cov <- function(reg_names, age_names, year_start, N_year, N_age,
   vacc_per_age[age == "age11to15", v2 := dt_vacc[paste(year - 7, tolower(regions), 2, 5, sep = "_"), coverage]]
   vacc_per_age[age == "age16to20", v1 := dt_vacc[paste(year - 12, tolower(regions), 1, 5, sep = "_"), coverage]]
   vacc_per_age[age == "age16to20", v2 := dt_vacc[paste(year - 12, tolower(regions), 2, 5, sep = "_"), coverage]]
-  vacc_per_age[age == "age21to40", v1 := dt_vacc[paste(year - 17, tolower(regions), 1, 5, sep = "_"), coverage]]
-  vacc_per_age[age == "age21to40", v2 := dt_vacc[paste(year - 17, tolower(regions), 2, 5, sep = "_"), coverage]]
+  vacc_per_age[age == "age21to30", v1 := dt_vacc[paste(year - 17, tolower(regions), 1, 5, sep = "_"), coverage]]
+  vacc_per_age[age == "age21to30", v2 := dt_vacc[paste(year - 17, tolower(regions), 2, 5, sep = "_"), coverage]]
   vacc_per_age[is.na(v1), v1 := 0]
   vacc_per_age[is.na(v2), v2 := 0]
   
@@ -313,16 +313,17 @@ compute_importation <- function(regions, N_age, scenario_import = "per_year"){
     mean_import_per_reg <- sum(c(1.6, 3.2, 3.0, 2.0, 2.3, 3.2, 20.1, 7.6, 3.2)) / 365.25 /  N_age *
       colSums(N) / sum(N)
   } else if(scenario_import == "per_year"){ 
-    mean_import_per_reg <- matrix(c(4, 2, 2,  1, 1, 4, 9,  10, 2,
-                                    1, 5, 3,  3, 4, 4, 48, 23, 10,
-                                    1, 0, 3,  1, 2, 2, 5,  5,  2,
-                                    4, 4, 2,  2, 1, 2, 6,  1,  1,
-                                    1, 4, 1,  2, 3, 3, 19, 4,  1,
-                                    1, 2, 0,  1, 2, 1, 11, 1,  4,
-                                    0, 1, 1,  0, 0, 3, 12, 5,  3,
-                                    2, 6, 2,  1, 3, 4, 19, 3,  2,
-                                    1, 3, 12, 3, 5, 1, 34, 10, 3,
-                                    1, 5, 4,  6, 2, 8, 38, 14, 4),
+    # Cases classified as imported or possible import in the epi data. 
+    mean_import_per_reg <- matrix(c(4, 2,  4,  1, 1,  8, 12, 10, 2,
+                                    1, 6,  3,  3, 10, 4, 55, 30, 10,
+                                    2, 10, 4,  2, 6,  3, 10, 7,  5,
+                                    6, 5,  3,  2, 2,  6, 7,  3,  2,
+                                    1, 4,  1,  2, 3,  3, 19, 4,  1,
+                                    1, 2,  0,  1, 2,  1, 11, 1,  4,
+                                    0, 1,  1,  0, 0,  3, 15, 5,  3,
+                                    2, 6,  2,  1, 4,  4, 19, 3,  2,
+                                    1, 3,  13, 4, 5,  1, 36, 10, 4,
+                                    1, 6,  4,  6, 2,  8, 39, 14, 4),
                                   ncol = length(regions), byrow = T
     )/365.25/  N_age
     colnames(mean_import_per_reg) <- regions
@@ -360,7 +361,7 @@ import_all_data <- function(year_start, N_year, scenario, vax, regions, age){
   
   ## Compute vaccine coverage through time
   list_array_cov <- compute_vax_cov(
-    reg_names = colnames(N), age_names = rownames(N), year_start = year_start, 
+    age_names = rownames(N), year_start = year_start, 
     N_year = N_year, N_age = nrow(N), regions = regions, scenario = scenario, 
     vax = vax)
   
