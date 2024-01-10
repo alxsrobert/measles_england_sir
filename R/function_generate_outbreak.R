@@ -40,6 +40,7 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   
   ## Extract parameters from the "sample" vector
   catchup <- if(any(names(sample) == "catchup")) sample["catchup"] else 0
+  catchup2 <- if(any(names(sample) == "catchup2")) sample["catchup2"] else 0
   recov6to9 <- sample["recov6to9"]
   recov11to15 <- sample["recov11to15"]
   recov16to20 <- sample["recov16to20"]
@@ -47,11 +48,8 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   recov31to40 <- sample["recov31to40"]   
   recov40plus <- sample["recov40plus"]
   
-  S <- data$S # round(data$N * (1 - data$recov) * data$unvax, 0)
-  R <- data$R # data$N - data$V1 - data$V2 - S
-  
   # Extract proportion of recovered from the samples
-  recov <- R * 0
+  recov <- data$R * 0
   recov["age6to9", ] <- recov6to9
   recov["age11to15", ] <- recov11to15
   recov["age16to20", ] <- recov16to20
@@ -61,9 +59,25 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   
   # Compute the proportion of vaccinated in each region / age group
   V_tot <- data$V1 + data$V2
-  # Adults in 20-30 who were caught up are set as V2
+  # Adults in 20-30 who were vaccinated during the MMR2 catchup in 1996 are set as V2
   data$V1["age21to30",] <- round(V_tot["age21to30", ] * (1 - catchup))
   data$V2["age21to30",] <- round(V_tot["age21to30", ] * (catchup))
+  
+  # Adults in 5-15 who were vaccinated during the catchup campaigns in 2008 and 2013 
+  # are set as V2
+  data$S["age6to9",] <- round(data$S["age6to9",] * (1 - catchup2))
+  data$V1["age6to9",] <- round(data$V1["age6to9",] * (1 - catchup2))
+  data$V2["age6to9",] <- round(data$V2["age6to9",] + 
+                                 data$S["age6to9",] * catchup2 +
+                                 data$V1["age6to9",] * catchup2)
+  data$S["age11to15",] <- round(data$S["age11to15",] - (1 - catchup2))
+  data$V1["age11to15",] <- round(data$V1["age11to15",] - (1 - catchup2))
+  data$V2["age11to15",] <- round(data$V2["age11to15",] + 
+                                   data$S["age11to15",] * catchup2 +
+                                   data$V1["age11to15",] * catchup2)
+  S <- data$S
+  R <- data$R
+  
   
   # Compute the number of importations per region 
   # (just use data$mean_import_per_reg if scenario_import == "per_year)
