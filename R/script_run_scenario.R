@@ -19,7 +19,7 @@ library(data.table)
 
 scenario <- "reference"
 # Number of simulations per sample
-n_part <- 10
+n_part <- 100
 n_samples <- 10
 
 #### Import data and model fit ####
@@ -79,5 +79,10 @@ for(k in seq_len(nrow(samples))){
 
 #### Analysis of all_output ####
 
+sum_i <- numeric(ncol(all_output))
+
+for(i in seq_along(sum_i)) 
+  sum_i[i] <- sum(all_output[grep("new_I", rownames(all_output)), i,])
+
 # Total number of cases per simulation:
-print(summary(apply(all_output[grep("new_I", rownames(all_output)), ,], 2, sum)))
+print(summary(sum_i))
