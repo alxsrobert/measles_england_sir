@@ -213,8 +213,8 @@ p_EI <- 1 - exp(-alpha * dt) # E to I
 p_IR <- 1 - exp(-gamma * dt) # I to R
 
 ## Define the duration of  the latent / infectious periods
-alpha <- user(0.1)
-gamma <- user(0.1)
+alpha <- user(1/11)
+gamma <- user(1/9)
 delta <- user(1/120)
 
 ## Define the default protection from infection brought by the vaccine
