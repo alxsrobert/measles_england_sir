@@ -15,92 +15,94 @@
 ### All compartments are stratified by age (ROWS) and regions (COLUMNS)
 ## Susceptibles compartments: 
 # New value of S, V1, and V2 is: 
-#   (old value) -
-#   (nb of individuals from the compartment who aged) +
-#   (nb of individuals who aged into the compartment) - 
+#   (number of individuals at the previous time step) +
+#   (nb of individuals who aged into the compartment) -
+#   (nb of individuals from the compartment who aged) - 
 #   (nb of susceptible individuals who were exposed)
 
 # First age groups: Add births
+# M is the number of children protected by maternal immunity
+# All values at age groups higher than 1 is 0
+# n_MS: number of people moving from M to S (losing maternal immunity at t)
 update(M[1, ]) <- M[1, j] +
   new_birth[j] -             # Births
-  n_MS[j]                    # Losing mat immun
-# M number of people in the Maternal Immunity compartment
-update(S[1, ]) <- S[1, j] +  # Initial
-  n_MS[j] - n_S[1, j] -      # from maternal immun + ageing out
-  n_SEs[1, j]                # Infected
+  n_MS[j]                    # Losing maternal immunity
 # S number of people in the Susceptible compartment
-# n_MS: number of people moving from M to S
 # S_Ses: number of people from S to "Exposed and unvaccinated"
+update(S[1, ]) <- S[1, j] +  # Number of susceptible age 0 to 1 at the previous time step
+  n_MS[j] - n_S[1, j] -      # from maternal immun + ageing out
+  n_SEs[1, j]                # Exposed
+# In the first age group, V1. V2. V1p, and V2p should be 0
+# V1 number of people in the single-vaccinated compartment (with vaccine failure)
 update(V1[1,]) <- V1[1, j] - # Initial
   n_V1[1, j] -               # Ageing out
-  n_v1E[1, j]                # Infected
+  n_v1E[1, j]                # Exposed
+# V2 number of people in the double-vaccinated compartment (double vaccine failure)
 update(V2[1,]) <- V2[1, j] - # Initial
   n_V2V2[1, j] -             # Ageing out
-  n_v2E[1, j]                # Infected
-# V1 number of people in the single-vaccinated compartment (with vaccine failure)
-# V2 number of people in the double-vaccinated compartment (double vaccine failure)
+  n_v2E[1, j]                # Exposed
 
+# V1 number of people in the single-vaccinated and protected compartment
 update(V1p[1,]) <- V1p[1, j] -# Initial
   n_V1p[1, j] -               # Ageing out
-  n_v1pE[1, j]                # Infection
+  n_v1pE[1, j]                # Exposed
+# V1 number of people in the double-vaccinated and protected compartment
 update(V2p[1,]) <- V2p[1, j] -# Initial
   n_V2pV2p[1, j] -            # Ageing out
-  n_v2pE[1, j]                # Infection
-# V1 number of people in the single-vaccinated compartment (and protected)
-# V2 number of people in the double-vaccinated compartment (and protected)
+  n_v2pE[1, j]                # Exposed
 
 
 # Following age groups
 update(S[2 : len_ageing,]) <- S[i, j] +   # Initial
   n_SS[i - 1, j] -                        # Ageing in
   n_S[i, j] -                             # Ageing out
-  n_SEs[i, j]                             # Infected
+  n_SEs[i, j]                             # Exposed
 
 update(V1[2 : len_ageing,]) <- V1[i, j] + # Initial
-  n_V1V1[i - 1, j] + n_SV1[i - 1, j] -    # Ageing in
+  n_V1V1[i - 1, j] + n_SV1[i - 1, j] -    # Ageing in (from vaccinated and susceptible)
   n_V1[i, j] -                            # Ageing out
-  n_v1E[i, j]                             # Infected
+  n_v1E[i, j]                             # Exposed
 
 update(V2[2 : len_ageing,]) <- V2[i, j] + # Initial
-  n_V2V2[i - 1, j] + n_V1V2[i - 1, j] -   # Ageing in
-  n_v2E[i, j] -                           # Infected
-  n_V2V2[i, j]                            # Ageing out
+  n_V2V2[i - 1, j] + n_V1V2[i - 1, j] -   # Ageing in (from already double vaccinated, or single vaccinated)
+  n_V2V2[i, j] -                          # Ageing out
+  n_v2E[i, j]                             # Exposed
 
 update(V1p[2 : len_ageing,]) <- V1p[i, j] + # Initial
   n_V1pV1p[i - 1, j] + n_SV1p[i - 1, j] -   # Ageing in
   n_V1p[i, j] -                             # Ageing out
-  n_v1pE[i, j]                              # Infection
+  n_v1pE[i, j]                              # Exposed
 
 update(V2p[2 : len_ageing,]) <- V2p[i, j] +                      # Initial
-  n_V2pV2p[i - 1, j] + n_V1V2p[i - 1, j] + n_V1pV2p[i - 1, j] -  # Ageing in
+  n_V2pV2p[i - 1, j] + n_V1V2p[i - 1, j] + n_V1pV2p[i - 1, j] -  # Ageing in (from double vaccinated, single vaccinated by not protected, and single vaccinated and protected)
   n_V2pV2p[i, j] -                                               # Ageing out
-  n_v2pE[i, j]                                                   # Infection
+  n_v2pE[i, j]                                                   # Exposed
 
 
 
 # Last age groups: Add ageing population
 update(S[N_age,]) <- S[N_age, j] +                # Initial
   n_SS[len_ageing, j] -                           # Ageing in
-  n_SEs[N_age, j]                                 # Infected
+  n_SEs[N_age, j]                                 # Exposed
 
 update(V1[N_age,]) <- V1[N_age, j] +              # Initial
   n_V1V1[len_ageing, j] + n_SV1[len_ageing, j] -  # Ageing in
-  n_v1E[N_age, j]                                 # Infected
+  n_v1E[N_age, j]                                 # Exposed
 
 update(V2[N_age,]) <- V2[N_age, j] +              # Initial
   n_V2V2[len_ageing, j] + n_V1V2[len_ageing, j] - # Ageing in
-  n_v2E[N_age, j]                                 # Infected
+  n_v2E[N_age, j]                                 # Exposed
 
 update(V1p[N_age,]) <- V1p[N_age, j] +              # Initial
   n_V1pV1p[len_ageing, j] + n_SV1p[len_ageing, j] - # Ageing in
-  n_v1pE[N_age, j]                                  # Infection
+  n_v1pE[N_age, j]                                  # Exposed
 
 update(V2p[N_age,]) <- V2p[N_age, j] +                                        # Initial
   n_V2pV2p[len_ageing, j] + n_V1V2p[len_ageing, j] + n_V1pV2p[len_ageing, j] -# Ageing in
-  n_v2pE[N_age, j]                                                            # Infection
+  n_v2pE[N_age, j]                                                            # Exposed
 
 
-## Exposed compartments: No ageing
+## Exposed compartments: No ageing (simplification since course of infection for measles is short)
 # New value of ES, EV1, and EV2 is: 
 #   (old value) + (new_exposed) - (nb of exposed individuals moving to infectious)
 update(Es[,]) <-  Es[i, j] +   # Initial
@@ -113,7 +115,7 @@ update(Ev2[,]) <- Ev2[i, j] +  # Initial
   n_v2E[i, j] + n_v2pE[i,j] -  # New exposed
   n_Ev12v2[i, j]               # Moving to infected
 
-## Infected compartments: No ageing
+## Infected compartments: No ageing (simplification since course of infection for measles is short)
 # New value of IS is:
 #   (old value) + (new_infected) + (new_imports) - (nb of infectious moving to recovered)
 # import_t corresponds to the number of new imports in this region / age group
@@ -146,11 +148,11 @@ update(R[2 : len_ageing,]) <- R[i, j] +         # Initial
   n_R[i, j] +                                   # Ageing out
   n_IsR[i, j]                                   # Recovered
 update(RV1[2 : len_ageing,]) <- RV1[i, j] +     # Initial
-  n_RV1RV1[i - 1, j] + n_RRV1[i - 1, j] -       # Ageing in
+  n_RV1RV1[i - 1, j] + n_RRV1[i - 1, j] -       # Ageing in (from single vaccinated or unvaccinated who gained vaccination)
   n_RV1[i, j] +                                 # Ageing out
   n_Iv1R[i, j]                                  # Recovered
 update(RV2[2 : len_ageing,]) <- RV2[i, j] +     # Initial
-  n_RV2RV2[i - 1, j] + n_RV1RV2[i - 1, j] -     # Ageing in
+  n_RV2RV2[i - 1, j] + n_RV1RV2[i - 1, j] -     # Ageing in (from double vaccinated or single vaccinated who gained vaccination)
   n_RV2RV2[i, j] +                              # Ageing out
   n_Iv2R[i, j]                                  # Recovered
 
@@ -167,15 +169,21 @@ update(RV2[N_age,]) <- RV2[N_age, j] +                 # Initial
   n_Iv2R[N_age, j]                                     # Recovered
 
 ## Track number of new infections each day per age / region
+# Unvaccinated
 update(new_IS[, ]) <- n_EsIs[i, j]
+# Single vaccinated
 update(new_IV1[, ]) <- n_Ev1Iv1[i, j]
+# Double vaccinated
 update(new_IV2[, ]) <- n_Ev12v2[i, j]
+# Total number of single vaccinated
 update(new_Iv1_tot) <- sum(n_Ev1Iv1[, ])
+# Total number of double vaccinated
 update(new_Iv2_tot) <- sum(n_Ev12v2[, ])
 
 #### 2- Compute the number of individuals changing between compartments via infection ####
 ## Draw from binomial distributions: 
-# Depends on the number of individuals in the compartment and the probability of moving
+# Depends on the number of individuals in the compartment and the probability of transition
+# p_XY represents the probability of moving from compartment X to Y (compute in section 3) 
 ## From maternal immunity to susceptible
 n_MS[] <- rbinom(M[1, i], p_MS[i])
 
@@ -201,7 +209,7 @@ n_Iv2R[,] <- rbinom(Iv2[i, j], p_IR)
 #### 3- Compute the probabilities of transition between each compartment: ####
 ## From S to E depends on lambda_t, the force of infection (per age / region / date)
 p_SE[,] <- 1 - exp(-lambda_t[i, j] * dt) # S to E
-## From v1 and v2 to E also depends on lambda, and v1/v2, the protection from infection 
+## From v1 and v2 to E also depends on lambda, and v2, the protection from infection 
 ## brought by the vaccine 
 p_SEv1[,] <- 1 - exp(-lambda_t[i, j] * v2[i] * dt) # V1 to Ev1
 p_SEv2[,] <- 1 - exp(-lambda_t[i, j] * v2[i] * dt) # V2 to Ev2
@@ -222,25 +230,28 @@ delta <- user(1/120)
 v_fail <- user(.02)
 ## v_leak => Loss of protection with age
 v_leak <- user(0)
+## v_sec: baseline risk of secondary vaccine failure
+v_sec <- user(0)
+## curr_year: current year
 curr_year <- year_start + trunc(step / 365)
 
-## If no waning, v2 = 0 (impossible to move away from V1p and V2p)
+## v2: risk of secondary vaccine failure by age group
+dim(v2) <- N_age
+## If no waning, v2 = v_sec (if v_sec = 0: impossible to be infected in V1p and V2p)
 ## If waning, depends on age and v_leak
-v2[] <- if(v_leak == 0 || sum(year_per_age[1:i]) <= 10) 0 else if(waning == 1)
-  v_leak * ((sum(year_per_age[1:(i-1)]) + year_per_age[i] / 2) - 10) else if(waning == 2)
-  v_leak * (min((sum(year_per_age[1:(i-1)]) + year_per_age[i] / 2) - 5, curr_year - 2000)) else
-  if((curr_year - sum(year_per_age[1:i])) > 2005 || 
-     (curr_year - sum(year_per_age[1:(i-1)])) < 1995) 0 else 
-  v_leak * ((min(sum(year_per_age[1:i]), curr_year - 1995) - 
-              max(sum(year_per_age[1:(i-1)]), curr_year - 2005))/
-              year_per_age[i])
+v2[] <- if(v_leak == 0 || sum(year_per_age[1:i]) <= 5) v_sec else if(waning == 1)
+  v_sec + v_leak * ((sum(year_per_age[1:(i-1)]) + year_per_age[i] / 2) - 5) else if(waning == 2)
+    v_sec + v_leak * (min((sum(year_per_age[1:(i-1)]) + year_per_age[i] / 2) - 5, 
+                          curr_year - 2000)) else
+                            v_sec
+
 
 year_start <- user()
 waning <- user()
-dim(v2) <- N_age
 
 #### 4- Compute lambda_t, the force of infection including the impact of seasonality ####
 
+# lambda_t depends on lambda (per age group / region) and seasonality
 lambda_t[,] <- lambda[i,j] * (1 + X * cos(2 * 3.14159 * time / 365.25 + Y))
 # Default values of X and Y (seasonality parameters)
 X <- user(1)
@@ -273,7 +284,8 @@ cases_ijkl[, , , ] <- m[i, k] * d_a[j, l] *
 ## d_a: the distance matrix after applying the spatial kernel (as a rate)
 
 d_a[,] <- if(i == j) 1 else 
-  (sum(N_strat[,j])^b) * (theta * ((d[i, j] - 1 )^(-a)) * sum(N_strat[,i])^c) / sum(N_strat[,i])
+  (sum(N_strat[,j])^b) * (theta * ((d[i, j] - 1 )^(-a)) * sum(N_strat[,i])^c) / 
+  sum(N_strat[,i])
 theta <- user() # No default value, has to be defined by the user
 c <- user() # No default value, has to be defined by the user
 
@@ -305,29 +317,14 @@ vacc <- user(1)
 
 #### 5- Compute the number of importations ####
 
-### Extract the number of importation per age / region at time (step + 1)
-mean_import_reg <- if(import_vax == 1) sum(mean_import[1, ]) else 0
-## Compute the total number of susceptible by region
-N_susc[] <- sum(S[,i]) + sum(V1[,i]) + sum(V2[,i])
-dim(N_susc) <- N_reg
-
-## If per_year, find the current day 
-row_number <- if(import_vax == 2) trunc(1 + (time / 365.25)) else 1
+## find the current day 
+row_number <- trunc(1 + (time / 365.25))
 ## Draw the number of importations from a poisson distribution using import 
 ## seasonality and average number of importation
-import_t[,] <- if(import_vax == 1)
-  rpois(mean_import_reg * (N_susc[j] / sum(N_susc[])) * (11 * N_strat[i,j])/sum(N_strat[,j]) *
-          (1 + X_import * cos(2 * 3.14159 * time / 365.25 + Y_import))) else if(import_vax == 2)
-  rpois(
-    mean_import[row_number, j] * (11 * N_strat[i,j])/sum(N_strat[,j]) *
-      (1 + X_import * cos(2 * 3.14159 * time / 365.25 + Y_import))
-  ) else
-  rpois(
-    mean_import[1, j] * (11 * N_strat[i,j])/sum(N_strat[,j]) *
-      (1 + X_import * cos(2 * 3.14159 * time / 365.25 + Y_import))
-  )
+import_t[,] <- rpois(
+  mean_import[row_number, j] * (12 * N_strat[i,j])/sum(N_strat[,j]) *
+    (1 + X_import * cos(2 * 3.14159 * time / 365.25 + Y_import)))
 
-import_vax <- user()
 X_import <- user()
 Y_import <- user()
 
@@ -345,11 +342,11 @@ dim(import_t) <- c(N_age, N_reg)
 N_time <- user(2)
 
 
-#### 6- Compute ageing ####
+#### 6- Compute the number of individuals ageing per region / age ####
 
-## Draw number of new births per region
-new_birth[] <- rpois(
-  array_new[i, iter])
+## Draw number of new births and deaths per region
+new_birth[] <- rpois(array_new[i, iter])
+# array_new: number of births per region / day
 array_new[,] <- user()
 dim(array_new) <- c(N_reg, N_time)
 dim(new_birth) <- c(N_reg)
@@ -366,10 +363,13 @@ dim(pop_per_age_v2) <- c(N_age, N_reg)
 year_per_age[] <- user()
 dim(year_per_age) <- c(N_age)
 
-# Then, draw the number of individuals ageing each day (depending on the population per vaccination status)
-N_ageing_S[,] <- if(iter %% 365 == 1 && i != 1) (pop_per_age_s[i, j])/(year_per_age[i] * 365) else 
-  if(iter %% 365 == 1 && i == 1)  (pop_per_age_s[i, j])/(year_per_age[i] * 365) / (1 - 1/(delta*365)) else 
-    N_ageing_S[i, j]
+# Draw the number of individuals ageing each day (depending on the population per vaccination status)
+# It changes when iter %% 365 == 1, ie when there's the beginning of a new year
+N_ageing_S[,] <- if(iter %% 365 == 1 && i != 1) 
+  (pop_per_age_s[i, j])/(year_per_age[i] * 365) else 
+    if(iter %% 365 == 1 && i == 1)  # in 0-1 yo children: take into account the duration of maternal immunity
+      (pop_per_age_s[i, j])/(year_per_age[i] * 365) / (1 - 1/(delta*365)) else 
+        N_ageing_S[i, j]
 N_ageing_V1[,] <- if(iter %% 365 == 1) (pop_per_age_v1[i, j])/(year_per_age[i] * 365) else N_ageing_V1[i, j]
 N_ageing_V2[,] <- if(iter %% 365 == 1) (pop_per_age_v2[i, j])/(year_per_age[i] * 365) else N_ageing_V2[i, j]
 
@@ -382,15 +382,23 @@ dim(N_ageing_V2) <- c(N_age, N_reg)
 # i.e: number of people ageing in compartment 
 # X = number of people ageing in this vaccination status *
 #         proportion of the population in this vaccination status that belongs to X
-mean_S[,] <- if(pop_per_age_s[i, j] > 0) N_ageing_S[i, j] * (S[i, j]/(pop_per_age_s[i, j])) else 0
-mean_V1[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (V1[i, j]/(pop_per_age_v1[i, j])) else 0
-mean_V2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (V2[i, j]/(pop_per_age_v2[i, j])) else 0
-mean_R[,] <- if(pop_per_age_s[i, j] > 0) N_ageing_S[i, j] * (R[i, j]/(pop_per_age_s[i, j])) else 0
-mean_RV1[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (RV1[i, j]/(pop_per_age_v1[i, j])) else 0
-mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (RV2[i, j]/(pop_per_age_v2[i, j])) else 0
+mean_S[,] <- if(pop_per_age_s[i, j] > 0) 
+  N_ageing_S[i, j] * (S[i, j]/(pop_per_age_s[i, j])) else 0
+mean_V1[,] <- if(pop_per_age_v1[i, j] > 0) 
+  N_ageing_V1[i, j] * (V1[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_V2[,] <- if(pop_per_age_v2[i, j] > 0) 
+  N_ageing_V2[i, j] * (V2[i, j]/(pop_per_age_v2[i, j])) else 0
+mean_R[,] <- if(pop_per_age_s[i, j] > 0) 
+  N_ageing_S[i, j] * (R[i, j]/(pop_per_age_s[i, j])) else 0
+mean_RV1[,] <- if(pop_per_age_v1[i, j] > 0) 
+  N_ageing_V1[i, j] * (RV1[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_RV2[,] <- if(pop_per_age_v2[i, j] > 0) 
+  N_ageing_V2[i, j] * (RV2[i, j]/(pop_per_age_v2[i, j])) else 0
 
-mean_V1p[,] <- if(pop_per_age_v1[i, j] > 0) N_ageing_V1[i, j] * (V1p[i, j]/(pop_per_age_v1[i, j])) else 0
-mean_V2p[,] <- if(pop_per_age_v2[i, j] > 0) N_ageing_V2[i, j] * (V2p[i, j]/(pop_per_age_v2[i, j])) else 0
+mean_V1p[,] <- if(pop_per_age_v1[i, j] > 0) 
+  N_ageing_V1[i, j] * (V1p[i, j]/(pop_per_age_v1[i, j])) else 0
+mean_V2p[,] <- if(pop_per_age_v2[i, j] > 0) 
+  N_ageing_V2[i, j] * (V2p[i, j]/(pop_per_age_v2[i, j])) else 0
 
 ## Compute overall number of movements between compartments using a poisson distribution
 n_S[,] <- rpois(mean_S[i, j])
@@ -423,17 +431,23 @@ n_V2pV2p[,] <- if(n_V2pV2p[i,j] >= (V2p[i, j] - n_v2pE[i, j])) (V2p[i, j] - n_v2
 # number of people in S who move to V1 = (1 - susceptible who do not get vaccinated)
 #         = 1 - ((1 - v1 - v2)[at age i] / (1 - v1 - v2)[at age i - 1])
 #  i.e (1 - proportion of unvaccinated at i-1 who are not getting vaccinated at i) 
-prop_v1[1:len_ageing,] <- if(iter == 1 || i == 1) array_cov1[i, j, iter] else if(iter <= 365)
-  (1 - (1 - array_cov1[i, j, iter] - array_cov2[i, j, iter]) / 
-     (1 - array_cov1[i - 1, j, 1] - array_cov2[i - 1, j, 1])) else
+prop_v1[1:len_ageing,] <- if(iter == 1 || i == 1) array_cov1[i, j, iter] else 
+  if(iter <= 365)
     (1 - (1 - array_cov1[i, j, iter] - array_cov2[i, j, iter]) / 
-       (1 - array_cov1[i - 1, j, iter - 365] - array_cov2[i - 1, j, iter - 365]))
-prop_v1[,] <- if(prop_v1[i,j] < 0)  0 else if(prop_v1[i,j] > 1) 1 else prop_v1[i, j]
+       (1 - array_cov1[i - 1, j, 1] - array_cov2[i - 1, j, 1])) else
+         (1 - (1 - array_cov1[i, j, iter] - array_cov2[i, j, iter]) / 
+            (1 - array_cov1[i - 1, j, iter - 365] - array_cov2[i - 1, j, iter - 365]))
+prop_v1[,] <- if(prop_v1[i,j] < 0)  0 else 
+  if(prop_v1[i,j] > 1) 1 else 
+    prop_v1[i, j]
+
 dim(prop_v1) <- c(len_ageing, N_reg)
 # Draw the number of individuals gaining vaccination as they age
 n_SVtot[1 : len_ageing,] <- rbinom(n_S[i, j], prop_v1[i, j])
+# Compute the number of primary vaccine failure
 n_SV1[1 : len_ageing,] <- rbinom(n_SVtot[i, j], v_fail)
 n_SV1p[1 : len_ageing,] <- n_SVtot[i, j] - n_SV1[i, j]
+
 n_RRV1[1 : len_ageing,] <- rbinom(n_R[i, j], prop_v1[i, j])
 # Draw the number of individuals who remain susceptible
 n_SS[1 : len_ageing,] <-  n_S[i, j] - n_SVtot[i, j]
@@ -456,10 +470,13 @@ prop_v1v2[1:len_ageing,] <-
 prop_v1v2[,] <- if(prop_v1v2[i,j] < 0)  0 else if(prop_v1v2[i,j] > 1) 1 else 
   prop_v1v2[i, j]
 dim(prop_v1v2) <- c(len_ageing, N_reg)
-# Draw the number of individuals gaining vaccination as they age
+# Draw the number of individuals gaining vaccination as they age 
+# number of individuals going from single vaccinated & protected to double vaccinated & protected
 n_V1pV2p[1 : len_ageing,] <- rbinom(n_V1p[i, j], prop_v1v2[i, j])
 
+# number of individuals going from primary vaccine failure to double vaccinated
 n_V1V2tot[1 : len_ageing,] <- rbinom(n_V1[i, j], prop_v1v2[i, j])
+# number of double primary vaccine failure
 n_V1V2[1 : len_ageing,] <- rbinom(n_V1V2tot[i, j], v_fail)
 n_V1V2p[1 : len_ageing,] <- n_V1V2tot[i, j] - n_V1V2[i, j]
 
@@ -482,11 +499,17 @@ initial(S[,]) <- if(i == 1) round(S_ini[i, j] * (1 - 1/(delta * 365))) else
   round(S_ini[i, j] * (1 - recov[i,j]))
 initial(M[,]) <- if(i == 1) round(S_ini[i, j] * 1/(delta * 365)) else 0
 
-## Use v_fail to compute the number of primary vaccine failure
+## Use v_fail to compute the number of primary vaccine failure at t=0
 initial(V1[,]) <- round(V1_ini[i, j] * v_fail * (1 - recov[i,j]))
 initial(V2[,]) <- round(V2_ini[i, j] * (v_fail ** 2) * (1 - recov[i,j]))
 initial(V1p[,]) <- round(V1_ini[i, j] * (1 - v_fail))
 initial(V2p[,]) <- round(V2_ini[i, j] * (1 - v_fail**2))
+
+## Use v_fail and recov to compute the number of primary vaccine failure and recovered at t=0
+initial(R[,]) <- round(S_ini[i,j] * recov[i,j])
+initial(RV1[,]) <- round(V1_ini[i, j] * v_fail * (recov[i,j]))
+initial(RV2[,]) <- round(V2_ini[i, j] * (v_fail ** 2) * (recov[i,j]))
+
 
 initial(Es[,]) <- Es_ini[i, j]
 initial(Ev1[,]) <- Ev1_init[i, j]
@@ -494,9 +517,6 @@ initial(Ev2[,]) <- Ev2_init[i, j]
 initial(Is[,]) <- Is_init[i, j]
 initial(Iv1[,]) <- Iv1_init[i, j]
 initial(Iv2[,]) <- Iv2_init[i, j]
-initial(R[,]) <- round(S_ini[i,j] * recov[i,j])
-initial(RV1[,]) <- round(V1_ini[i, j] * v_fail * (recov[i,j]))
-initial(RV2[,]) <- round(V2_ini[i, j] * (v_fail ** 2) * (recov[i,j]))
 initial(new_IS[, ]) <- 0
 initial(new_IV1[, ]) <- 0
 initial(new_IV2[, ]) <- 0
@@ -506,15 +526,15 @@ recov[,] <- user()
 dim(recov) <- c(N_age, N_reg)
 
 ## Default values
-S_ini[,] <- user(100)
-V1_ini[,] <- user(100)
-V2_ini[,] <- user(800)
-Es_ini[,] <- user(0)
-Ev1_init[,] <- user(0)
-Ev2_init[,] <- user(0)
-Is_init[,] <- user(1)
-Iv1_init[,] <- user(0)
-Iv2_init[,] <- user(0)
+S_ini[,] <- user()
+V1_ini[,] <- user()
+V2_ini[,] <- user()
+Es_ini[,] <- user()
+Ev1_init[,] <- user()
+Ev2_init[,] <- user()
+Is_init[,] <- user()
+Iv1_init[,] <- user()
+Iv2_init[,] <- user()
 
 ### Dimensions of each compartment
 dim(S) <- c(N_age, N_reg)
