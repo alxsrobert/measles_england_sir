@@ -115,7 +115,7 @@ compute_initial_state <- function(vax, scenario, N_age, regions, N){
   # the risk assessment document, otherwise use unadjusted coverage (for data prior to 2004) 
   if(vax == "cprd") adj <- "Yes" else adj <- "No"
   N_reg <- length(regions)
-  dt_vacc <- import_ehr_vaccine(vax, scenario)
+  dt_vacc <- import_vaccine(vax, scenario)
 
   ## Define vaccine uptake and proportion of recovered at t = 0
   # In the first age group, everyone is susceptible
