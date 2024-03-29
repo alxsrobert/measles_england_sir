@@ -24,7 +24,7 @@ run_model <- function(list_model, vax, n_steps, waning, sec, distance){
 }
 
 ## Create control and filter objects, which are the same in all scenarios
-initialise_model <- function(n_steps){
+initialise_model <- function(n_steps, anoun = FALSE){
   list_specs_run <- specs_run()
   
   ## Import odin.dust model
@@ -36,7 +36,7 @@ initialise_model <- function(n_steps){
                                     age = list_specs_run$age, 
                                     vacc_yes = list_specs_run$vacc_yes, 
                                     year_start = list_specs_run$year_start,
-                                    N_year = list_specs_run$N_year)
+                                    N_year = list_specs_run$N_year, anoun = anoun)
   
   ## Initialise the model using the parameters previously defined
   filter <- mcstate::particle_deterministic$new(
