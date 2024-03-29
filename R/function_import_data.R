@@ -26,22 +26,14 @@ import_pop_data <- function(year_start){
 }
 
 ## Import vaccine data
-import_ehr_vaccine <- function(vax, scenario){
+import_vaccine <- function(vax, scenario){
   if(vax == "cover" & scenario == "reference") {
-    cov_per_year <- read.csv2(#ADD VACCINE DATASET FROM COVER DATA
-                              sep = ";") %>% 
     cov_per_year <- read.csv2(
       "Data/coverage_cover_extrapol.csv", sep = ";") %>% as.data.table()
   } else if(vax == "cprd" & scenario == "reference"){
     cov_per_year <- read.csv2("Data/coverage_cprd_extrapol.csv", sep = ";") %>% 
       as.data.table()
-      as.data.table()
-  } else if(vax == "cprd" & scenario == "reference"){
-    cov_per_year <- read.csv2(#ADD VACCINE DATASET FROM CPRD DATA
-                              sep = ";") %>% 
-      as.data.table()
-  }
-  
+  } 
   ## Formatting changes
   cov_per_year[, region := toupper(region)]
   cov_per_year[, dose := as.numeric(n_dose)]
@@ -217,7 +209,7 @@ compute_vax_cov <- function(age_names, year_start, N_year, N_age,
   # Compute the number of regions
   N_reg <- length(regions)
   # Import vaccine coverage
-  dt_vacc <- import_ehr_vaccine(vax, scenario)
+  dt_vacc <- import_vaccine(vax, scenario)
   # Create empty data table to compute the vaccine coverage per region / age / year
   vacc_per_age <- data.table(regions = rep(toupper(regions), N_age * N_year), 
                              age = rep(rep(age_names, each = N_reg), N_year),
@@ -310,6 +302,7 @@ compute_contact_matrix <- function(year_per_age){
   return(ref_m)
 }
 
+## Compute the number of reported importations per year (from UKHSA's epi data)
 compute_importation <- function(regions, N_age, scenario_import = "per_year"){
   # Cases classified as imported or possible import in the epi data. 
   mean_import_per_reg <- matrix(c(4, 2,  4,  1, 1,  8, 12, 10, 2,
