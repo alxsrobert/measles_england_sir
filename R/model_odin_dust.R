@@ -276,7 +276,7 @@ dim(N_strat) <- c(N_age, N_reg)
 ## Compute the potential of infection given the current number of infectious cases
 ## in each age group / region. Transmission from cases A (age i, region j) to 
 ## B (age k, region l) is m[i, k] * d[j, l]**-a
-## with m the age contact matrix, d the distance matrix, and a the spatial kernel parameter
+## with m the age contact matrix, and d the distance matrix, 
 ## Therefore, we compute cases_ijkl (the number of connection from [i,j] to [k,l])
 cases_ijkl[, , , ] <- m[i, k] * d_a[j, l] *
   (Is[i, j] + vacc * Iv1[i, j] + vacc * Iv2[i, j])
@@ -284,7 +284,7 @@ cases_ijkl[, , , ] <- m[i, k] * d_a[j, l] *
 ## d_a: the distance matrix after applying the spatial kernel (as a rate)
 
 d_a[,] <- if(i == j) 1 else 
-  (sum(N_strat[,j])^b) * (theta * ((d[i, j] - 1 )^(-a)) * sum(N_strat[,i])^c) / 
+  (sum(N_strat[,j])^b) * (theta * ((d[i, j] - 1 )^(-1)) * sum(N_strat[,i])^c) / 
   sum(N_strat[,i])
 theta <- user() # No default value, has to be defined by the user
 c <- user() # No default value, has to be defined by the user
@@ -307,7 +307,6 @@ dim(d) <- c(N_reg, N_reg)
 # Default value of the matrices and parameters
 m[, ] <- user() # No default value, has to be defined by the user
 d[, ] <- user() # No default value, has to be defined by the user
-a <- user(2)
 b <- user(0)
 N_age <- user(2)
 N_reg <- user(2)
@@ -494,24 +493,24 @@ dim(array_cov2) <- c(len_ageing, N_reg, N_time)
 
 #### 7- Initial conditions ####
 
-## Compute the initial number of susceptibles from S_ini and the duration of maternal immunity
-initial(S[,]) <- if(i == 1) round(S_ini[i, j] * (1 - 1/(delta * 365))) else
-  round(S_ini[i, j] * (1 - recov[i,j]))
-initial(M[,]) <- if(i == 1) round(S_ini[i, j] * 1/(delta * 365)) else 0
+## Compute the initial number of susceptibles from S_init and the duration of maternal immunity
+initial(S[,]) <- if(i == 1) round(S_init[i, j] * (1 - 1/(delta * 365))) else
+  round(S_init[i, j] * (1 - recov[i,j]))
+initial(M[,]) <- if(i == 1) round(S_init[i, j] * 1/(delta * 365)) else 0
 
 ## Use v_fail to compute the number of primary vaccine failure at t=0
-initial(V1[,]) <- round(V1_ini[i, j] * v_fail * (1 - recov[i,j]))
-initial(V2[,]) <- round(V2_ini[i, j] * (v_fail ** 2) * (1 - recov[i,j]))
-initial(V1p[,]) <- round(V1_ini[i, j] * (1 - v_fail))
-initial(V2p[,]) <- round(V2_ini[i, j] * (1 - v_fail**2))
+initial(V1[,]) <- round(V1_init[i, j] * v_fail * (1 - recov[i,j]))
+initial(V2[,]) <- round(V2_init[i, j] * (v_fail ** 2) * (1 - recov[i,j]))
+initial(V1p[,]) <- round(V1_init[i, j] * (1 - v_fail))
+initial(V2p[,]) <- round(V2_init[i, j] * (1 - v_fail**2))
 
 ## Use v_fail and recov to compute the number of primary vaccine failure and recovered at t=0
-initial(R[,]) <- round(S_ini[i,j] * recov[i,j])
-initial(RV1[,]) <- round(V1_ini[i, j] * v_fail * (recov[i,j]))
-initial(RV2[,]) <- round(V2_ini[i, j] * (v_fail ** 2) * (recov[i,j]))
+initial(R[,]) <- round(S_init[i,j] * recov[i,j])
+initial(RV1[,]) <- round(V1_init[i, j] * v_fail * (recov[i,j]))
+initial(RV2[,]) <- round(V2_init[i, j] * (v_fail ** 2) * (recov[i,j]))
 
 
-initial(Es[,]) <- Es_ini[i, j]
+initial(Es[,]) <- Es_init[i, j]
 initial(Ev1[,]) <- Ev1_init[i, j]
 initial(Ev2[,]) <- Ev2_init[i, j]
 initial(Is[,]) <- Is_init[i, j]
@@ -526,10 +525,10 @@ recov[,] <- user()
 dim(recov) <- c(N_age, N_reg)
 
 ## Default values
-S_ini[,] <- user()
-V1_ini[,] <- user()
-V2_ini[,] <- user()
-Es_ini[,] <- user()
+S_init[,] <- user()
+V1_init[,] <- user()
+V2_init[,] <- user()
+Es_init[,] <- user()
 Ev1_init[,] <- user()
 Ev2_init[,] <- user()
 Is_init[,] <- user()
@@ -557,10 +556,10 @@ dim(new_IV1) <- c(N_age, N_reg)
 dim(new_IV2) <- c(N_age, N_reg)
 
 ### Initialise the dimensions of the compartments' initial value
-dim(S_ini) <- c(N_age, N_reg)
-dim(V1_ini) <- c(N_age, N_reg)
-dim(V2_ini) <- c(N_age, N_reg)
-dim(Es_ini) <- c(N_age, N_reg)
+dim(S_init) <- c(N_age, N_reg)
+dim(V1_init) <- c(N_age, N_reg)
+dim(V2_init) <- c(N_age, N_reg)
+dim(Es_init) <- c(N_age, N_reg)
 dim(Ev1_init) <- c(N_age, N_reg)
 dim(Ev2_init) <- c(N_age, N_reg)
 dim(Is_init) <- c(N_age, N_reg)
