@@ -31,7 +31,7 @@ initialise_model <- function(n_steps, anoun = FALSE){
   si_age <- odin.dust::odin_dust("R/model_odin_dust.R")
   
   ## Import data
-  particle_data <- import_case_data(state_names = list_specs_run$state_names, 
+  particle_data <- create_part_data(state_names = list_specs_run$state_names, 
                                     regions = list_specs_run$regions, 
                                     age = list_specs_run$age, 
                                     vacc_yes = list_specs_run$vacc_yes, 
@@ -94,4 +94,39 @@ specs_run <- function(){
   return(list(state_names = state_names, regions = regions, age = age, N_year = N_year,
               vacc_yes = vacc_yes, year_start = year_start, N_time = N_time, 
               scenario = scenario, catchup = catchup))
+}
+
+## Create particle_filter_data object, which contains the data
+create_part_data <- function(state_names, regions, age, vacc_yes, year_start, N_year, 
+                             anoun = TRUE){
+  ## Import case data
+  data_anoun <- import_case_data(state_names, regions, age, vacc_yes, year_start, 
+                                 N_year, anoun)
+  
+  ## Create unique row id
+  data_anoun[, population := paste(vaccinated, region, age_groups, sep = "_")]
+  
+  ## Create levels of row id and set population as factor
+  levels_pop <- c(paste(rep(paste(rep(state_names, each = length(regions)),
+                                  rep(toupper(regions), length(state_names)), sep = "_"),
+                            each = length(age)), age, sep = "_")
+  )
+  data_anoun[, population := factor(population, levels = levels_pop)]
+  data_anoun <- data_anoun[order(population),]
+  
+  ## Rename column "N" into "cases
+  data_anoun[, cases := N]
+  data_anoun[, N := NULL]
+  
+  ## Set date as numeriw
+  data_anoun[, date := as.numeric(date)]
+  ## Select columns dates, cases, and population
+  data_anoun <- data_anoun[, .(date, cases, population)]
+  data_anoun <- pivot_wider(data_anoun, names_from = "population", values_from = "cases")
+  
+  ## Create odin data object
+  particle_data <- mcstate::particle_filter_data(data_anoun, time = "date", rate = 1
+                                                 , initial_time = 0
+  )
+  return(particle_data)
 }
