@@ -109,4 +109,14 @@ for(i in seq_along(input_parameters)){
   png(paste0(repos_figures_i, "seasonality.png"), width = 500, height = 400)
   plot_figure_season(list_pmcmc_run)
   dev.off()
+  
+  ## Posterior distribution
+  png(paste0(repos_figures_i, "posterior.png"), width = 500, height = 400)
+  plot_posterior(list_pmcmc_run, burnin, thin)
+  dev.off()
+  
+  ## Density of parameter estimates
+  png(paste0(repos_figures_i, "parameter_density.png"), width = 900, height = 600)
+  plot_dens_param(list_pmcmc_run, burnin, thin)
+  dev.off()
 }

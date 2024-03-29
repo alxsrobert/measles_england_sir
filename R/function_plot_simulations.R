@@ -129,7 +129,8 @@ plot_figure_region_age <- function(list_output, data_anoun, age, regions){
 }
 
 # Plot supplement: Parameter estimates in the model
-plot_figure_parameters <- function(list_pmcmc_run, specs, burnin, thin, vax, sec, distance){
+plot_figure_parameters <- function(list_pmcmc_run, specs, burnin, thin, vax, sec, 
+                                   distance){
   ## Import list containing all data
   all_data <- import_all_data(
     year_start = list_specs_run$year_start, N_year = list_specs_run$N_year,
@@ -264,6 +265,86 @@ plot_figure_season <- function(list_pmcmc_run){
   title(xlab = "Time (Days)", outer = T, line = -1)
 }
 
+# Plot supplement: Plot posterior distribution
+plot_posterior <- function(list_pmcmc_run, burnin, thin,
+                           col = c("#4575b4", "#d73027", "#bf812d")){
+  ## Extract posterior from list_pmcmc_run, after burnin and thinning
+  list_post <- lapply(list_pmcmc_run, function(X){
+    post_x <- X$probabilities[-c(1:burnin),3]
+    iter <- seq(1, length(post_x), thin)
+    post_x <- (post_x[iter])
+    return(post_x)
+  })
+  
+  ## Plot the density of each element in list_post
+  par(mfrow = c(1, 1), mar = c(2, 4, 1, 0), oma = c(3,1,0,1), bty = "l")
+  list_post[[1]] %>% density %>% 
+    plot(main = "Density of posterior distribution per model", 
+         type = "h", xlim = c(-36200, -35950), col = col[1])
+  if(length(list_post) > 1){
+    for(i in seq(2, length(list_post))){
+      list_post[[i]] %>% density %>% lines(type = "h", col = col[i])
+    }
+  }
+  title(xlab = "Posterior", outer = T, line = 1)
+  legend("center", fill = col, legend = names(list_post), border = NA, bty = "n")
+  
+}
+
+# Plot supplement: Plot density of the parameter estimates
+plot_dens_param <- function(list_pmcmc_run, burnin, thin,
+                            col = c("#4575b4", "#d73027", "#bf812d")){
+  ## Extract samples from list_pmcmc_run, after burnin and thinning
+  list_samples <- lapply(list_pmcmc_run, function(X){
+    samples_x <- X$pars[-c(1:burnin),]
+    iter <- seq(1, nrow(samples_x), thin)
+    samples_x <- (samples_x[iter,])
+    if(!any(colnames(samples_x) == "v_leak")) {
+      samples_x <- cbind(samples_x, v_leak = 0) 
+    } else {
+      samples_x[, "v_leak"] <- samples_x[, "v_leak"] * 100
+    }
+    
+    return(samples_x)
+  })
+  
+  ## Add a column to each element of list_samples with the name of the model
+  for(i in seq_along(list_samples)){
+    list_samples[[i]] <- cbind.data.frame(model = names(list_samples)[i], 
+                                          list_samples[[i]])
+  }
+  
+  ## Merge all elements of list_samples into a data frame
+  df_samples <- do.call(rbind.data.frame, list_samples)
+  
+  ## Move df_samples to a long format
+  df_samples <- pivot_longer(df_samples, !model)
+  
+  ## Rename some of the parameters to match the paper
+  df_samples[df_samples$name == "vacc",]$name <- "v_onwards"
+  df_samples[df_samples$name == "report_import",]$name <- "p_import"
+  
+  df_samples[df_samples$name == "delta",]$value <- 
+    1/df_samples[df_samples$name == "delta",]$value
+  
+  df_samples$name <- factor(
+    df_samples$name, 
+    levels = c( "beta", "delta", "X", "Y", 
+                "v_fail", "v_onwards", "v_leak", 
+                "p_import", "X_import", "Y_import",
+                "recov11to15",  "recov16to20", "recov21to30", "recov31to40", "recov40plus", 
+                "catchup", "catchup2", 
+                "theta", "b", "c"
+    ))
+  
+  ## Generate the plot
+  ggplot(df_samples) + 
+    geom_density(aes(x = value, fill = model), alpha = .2, col = NA) + 
+    facet_wrap(~name, scales = "free") + 
+    scale_fill_manual(values = col) + theme_bw()
+  
+  
+}
 
 ## Plot number (or proportion) of cases by age group
 plot_age <- function(output, data, age_group, prop = T, legend = T,
