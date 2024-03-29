@@ -7,8 +7,10 @@ source("R/import_library.R")
 list_specs_run <- specs_run()
 
 ## Compute the total number of cases per region across simulations
-data_anoun <- data_for_comparison(list_specs_run$year_start, list_specs_run$N_year,
-                                  list_specs_run$age, list_specs_run$regions)
+data_anoun <- import_case_data(
+  list_specs_run$state_names, list_specs_run$regions, list_specs_run$age, 
+  list_specs_run$vacc_yes, list_specs_run$year_start, list_specs_run$N_year,
+  anoun = TRUE)
 
 ## Create the four different scenario
 ## - main scenario: cprd vaccine data, distance kernel parameter estimated, no baseline leak
