@@ -1,6 +1,3 @@
-set.seed(1)
-## Script:
-## Import odin.dust model, define model variables, run model, plot outputs
 n_steps <- 20000
 
 source("R/import_library.R")
@@ -30,10 +27,10 @@ for(i in seq_along(input_parameters)){
   
   for(waning in vec_waning){
     ## Run model
+    set.seed(1)
     pmcmc_run <- run_model(
       list_model = specs_model, vax = vax, n_steps = n_steps, 
       distance = distance, waning = waning, sec = sec)
-    
     ## Save output
     saveRDS(pmcmc_run, paste0("Output/", vax, "_", distance, if(sec) "_sec", "/",
                               waning, ".RDS"))
