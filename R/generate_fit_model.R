@@ -1,7 +1,7 @@
 set.seed(1)
 ## Script:
 ## Import odin.dust model, define model variables, run model, plot outputs
-n_steps <- 20
+n_steps <- 20000
 
 source("R/import_library.R")
 

@@ -45,7 +45,7 @@ initialise_model <- function(n_steps, anoun = FALSE){
   
   ## Create control object
   control <- mcstate::pmcmc_control(
-    n_steps = n_steps * 1000, save_state = FALSE,  adaptive_proposal = TRUE, 
+    n_steps = n_steps, save_state = FALSE,  adaptive_proposal = TRUE, 
     save_trajectories = FALSE, progress = TRUE)
   
   return(list(control = control, filter = filter))
