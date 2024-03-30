@@ -1,7 +1,8 @@
+n_samples <- 500
+n_part <- 10
+
 source("R/import_library.R")
 
-n_part <- 10
-n_samples <- 500
 
 ## Generate model specifications
 list_specs_run <- specs_run()
@@ -34,6 +35,7 @@ for(i in seq_along(input_parameters)){
     ## Generate stochastic simulations (n_part * n_samples simulations in total)
     all_output <- generate_outbreaks(pmcmc_run, list_specs_run, vax, n_part, n_samples, waning,
                                      burnin = 1000)
+    
     ## save 3d array containing the stochastic simulations per status and year
     saveRDS(all_output, paste0("Output/", vax, "_", distance, if(sec) "_sec", "/sim_",
                                waning, ".RDS"))
