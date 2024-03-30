@@ -280,14 +280,15 @@ plot_posterior <- function(list_pmcmc_run, burnin, thin,
   par(mfrow = c(1, 1), mar = c(2, 4, 1, 0), oma = c(3,1,0,1), bty = "l")
   list_post[[1]] %>% density %>% 
     plot(main = "Density of posterior distribution per model", 
-         type = "h", xlim = c(-36200, -35950), col = col[1])
+         type = "h", xlim = c(-36600, -35950), col = col[1])
   if(length(list_post) > 1){
     for(i in seq(2, length(list_post))){
       list_post[[i]] %>% density %>% lines(type = "h", col = col[i])
     }
   }
   title(xlab = "Posterior", outer = T, line = 1)
-  legend("center", fill = col, legend = names(list_post), border = NA, bty = "n")
+  legend("center", fill = col, legend = names(list_post), border = NA,
+         bty = "n")
   
 }
 
@@ -338,11 +339,11 @@ plot_dens_param <- function(list_pmcmc_run, burnin, thin,
     ))
   
   ## Generate the plot
-  ggplot(df_samples) + 
-    geom_density(aes(x = value, fill = model), alpha = .2, col = NA) + 
-    facet_wrap(~name, scales = "free") + 
-    scale_fill_manual(values = col) + theme_bw()
-  
+  print(ggplot(df_samples) + 
+          geom_density(aes(x = value, fill = model), alpha = .2, col = NA) + 
+          facet_wrap(~name, scales = "free") + 
+          scale_fill_manual(values = col) + theme_bw()
+  )
   
 }
 
