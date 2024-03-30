@@ -46,10 +46,10 @@ The overall runtime does not exceed 15 minutes on a standard laptop with a 3.0 G
 ## Output
 
 The output folder contains four subfolders (one for each scenario):
-* `Output/cprd_degree.csv`: 
-* `Output/cprd_degree_sec.csv`: 
-* `Output/cover_degree.csv`: 
-* `Output/cprd_fixed.csv`: 
+* `Output/cprd_degree.csv`: Files and figures using CPRD coverage data, and estimating the spatial kernel.
+* `Output/cprd_degree_sec.csv`: Files and figures using CPRD coverage data, estimating the spatial kernel, with a risk of leak from vaccinated compartments constant with age.
+* `Output/cover_degree.csv`: Files and figures using COVER coverage data, and estimating the spatial kernel.
+* `Output/cprd_fixed.csv`: Files and figures using CPRD coverage data, with a fixed spatial kernel.
 
 Each folder contains three files with the parameter estimates and posterior distribution, computed when fitting the model to measles case data reported in England between 2010 and 2019:
 * `no.rds`: model without waning.
