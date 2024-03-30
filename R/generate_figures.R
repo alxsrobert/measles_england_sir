@@ -35,6 +35,11 @@ for(i in seq_along(input_parameters)){
   ## Repository where the figures will be saved
   repos_figures_i <- paste0(repos_i, "/figures/")
   
+  ## If repos_figures_i does not exist, create it
+  if (!file.exists(repos_figures_i)){
+    dir.create(file.path(repos_figures_i))
+  }
+  
   ### Import files containing the simulations generated for this scenario
   ## Without waning
   all_output_no <- readRDS(paste0(repos_i, "/sim_no.RDS"))
