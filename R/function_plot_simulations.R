@@ -74,10 +74,12 @@ plot_figure_vax_year <- function(list_output, data_anoun){
   par(mfrow = c(2, 1), mar = c(2, 4, 1, 0), oma = c(3,1,0,1), bty = "l")
   plot_year(output = list_output, data_anoun, prop = "IV1", legend = T, 
             ymax = 17)
+  title(main = "A", adj = 0)
   title(ylab = "% of single-vaccinated cases", outer = F, line = 2.5, cex.lab = 1)
   # Plot proportion of double vaccinated cases each year
   plot_year(output = list_output, data_anoun, prop = "IV2", legend = F, 
             ymax = 10)
+  title(main = "B", adj = 0)
   title(ylab = "% of double-vaccinated cases", outer = F, line = 2.5, cex.lab = 1)
   title(xlab = "year", outer = T, line = 1, cex.lab = 1)
   
