@@ -34,9 +34,5 @@ for(i in seq_along(input_parameters)){
     ## Save output
     saveRDS(pmcmc_run, paste0("Output/", vax, "_", distance, if(sec) "_sec", "/",
                               waning, ".RDS"))
-    if(vacc_yes == "v1" & distance == "degree" & waning == "no" & 
-       scenario_import == "per_year" & vax == "cprd" & 
-       sec == FALSE)
-      saveRDS(pmcmc_run$pars, "Output/v1_cprd_10k_peryear_catchup_pars.RDS")
   }
 }
