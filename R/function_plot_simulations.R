@@ -197,7 +197,7 @@ plot_figure_parameters <- function(list_pmcmc_run, specs, burnin, thin, vax, sec
   
   ## Plot proportion of unvaccinated vaccinated during catchup campaigns
   plot_column_sample(list_quant, "catchup", ymax = 1, col = col)
-  axis(side = 1, at = c(1,2), las = 1, labels = c("1996 (20-30 yo)", "2008 (5-10yo)"))
+  axis(side = 1, at = c(1,2), las = 1, labels = c("1996 (20-30 yo)", "2008 (6-10yo)"))
   title(ylab = "Proportion of unvaccinated\n individuals vaccinated in \ncatch-up campaigns", 
         outer = F, line = 2.2)
   title(xlab = "Catchup campaign and target age group", outer = F, line = 2)

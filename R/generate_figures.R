@@ -52,13 +52,13 @@ for(i in seq_along(input_parameters)){
   
   ## Aggregate no waning, waning since vax and waining since eli in a list
   list_output <- list("no waning" = all_output_no, 
-    "since vaccination" = all_output_since_vax,
-    "since elimination" = all_output_since_eli
+    "with waning" = all_output_since_vax,
+    "with waning starting in 1990" = all_output_since_eli
   )
   ## Aggregate waining since eli and waning since eli (removed waning) in a list
   list_output_nowane <- list(
-    "since elimination" = all_output_since_eli,
-    "since elimination, remove waning" = all_output_since_eli_nowane
+    "waning starting in 1990" = all_output_since_eli,
+    "waning starting in 1990, setting waning to 0" = all_output_since_eli_nowane
   )
   
   ## Import files containing the model fits generated for this scenario and 
@@ -68,8 +68,8 @@ for(i in seq_along(input_parameters)){
   pmcmc_run_since_vax <- readRDS(paste0(repos_i, "/since_vax.RDS"))
   
   list_pmcmc_run <- list("no waning" = pmcmc_run_no, 
-                         "since vaccination" = pmcmc_run_since_vax,
-                         "since elimination" = pmcmc_run_since_eli
+                         "with waning" = pmcmc_run_since_vax,
+                         "with waning starting in 1990" = pmcmc_run_since_eli
   )
   
   ## If "sec" is true, "no waning" contains a constant risk of secondary vaccine failure
