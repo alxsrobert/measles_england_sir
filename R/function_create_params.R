@@ -1,6 +1,6 @@
 ## Function to create mcstate::pmcmc_parameters
 create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data, 
-                             year_start, N_time, sec){
+                             year_start, N_time, sec, vacc_70s){
   ## Extract elements from list_data (generated with the function import_all_data)
   ref_d <- list_data[["ref_d"]]
   ref_m <- list_data[["ref_m"]]
@@ -17,7 +17,7 @@ create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data,
   year_per_age <- list_data[["year_per_age"]]
   
   ## Create vector containing initial values of parameters 
-  init <- create_init(vacc_yes, vax, distance, waning, sec)
+  init <- create_init(vacc_yes, vax, distance, waning, sec, vacc_70s)
   
   ## Extract elements from init as pcmc_parameter objects
   # Transmission parameter
@@ -41,6 +41,11 @@ create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data,
   # Risk of secondary vaccine failure constant with age (if sec)
   if(sec)
     v_sec <- mcstate::pmcmc_parameter("v_sec", init["v_sec"],min = 0, max = .01)
+  # Proportion of individuals born in the 1970s vaccinated once (if vacc_70s)
+  if(vacc_70s){
+    v_70s <- mcstate::pmcmc_parameter("v_70s", init["v_70s"],min = 0, max = 1, prior = function(p)
+      dbeta(p, shape1 = 10, shape2 = 10, log = TRUE))
+  }
   
   # Proportion of unvaccinated cases vaccinated during the catchup campaigns
   catchup <- mcstate::pmcmc_parameter("catchup", init["catchup"],min = 0, max = 1)
@@ -81,6 +86,8 @@ create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data,
   if(waning != "no") pars <- append(pars, list(v_leak))
   # If constant risk of leak from the vaccine, add v_sec
   if(sec) pars <- append(pars, list(v_sec))
+  # If vaccination in individuals born in the 1970s, add v_70s
+  if(vacc_70s) pars <- append(pars, list(v_70s))
   # If distance parameters are estimated, add theta, b, and c
   if(distance != "fixed") pars <- append(pars, list(theta, b, c))
   # Add catchup parameters
@@ -88,7 +95,7 @@ create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data,
   
   # Create proposal matrix
   proposal_matrix <- 
-    create_proposal(vacc_yes, vax, distance, waning, init, pars, sec)
+    create_proposal(vacc_yes, vax, distance, waning, init, pars, sec, vacc_70s)
   
   # Function for parameter transformation
   transform <- make_transform(
@@ -106,20 +113,20 @@ create_mcmc_pars <- function(vacc_yes, vax, distance, waning, list_data,
     
     dt = 1, year_start = year_start, year_per_age = year_per_age,
     # If the following parameters are included in pars, this reference level will be ignored
-    b = 1, c = 1, theta = 1, v_leak = 0, v_sec = 0
+    b = 1, c = 1, theta = 1, v_leak = 0, v_sec = 0, v_70s = 0
   )
+
   ## create pmcmc_parameters object
   mcmc_pars <- mcstate::pmcmc_parameters$new(
     parameters = pars, proposal = proposal_matrix, transform = transform
   )
-  
   return(mcmc_pars)
 }
 
 ## Transformation function to move between inferred parameters and parameters 
 ## needed to implement the model (see https://mrc-ide.github.io/mcstate/reference/pmcmc_parameters.html)
 make_transform <- function(pars,m, d, import, N_time, N_age, N_reg, 
-                           b, c, theta, v_leak, v_sec, 
+                           b, c, theta, v_leak, v_sec, v_70s,
                            S_init, V1_init, V2_init, Es_init, 
                            Ev1_init, Ev2_init, Is_init, Iv1_init, Iv2_init, 
                            R_init, RV1_init, RV2_init, array_cov1, array_cov2, 
@@ -149,6 +156,8 @@ make_transform <- function(pars,m, d, import, N_time, N_age, N_reg,
       v_leak <- if(length(pars) == 1) pars else pars[["v_leak"]]
     if(any(names(pars) == "v_sec"))
       v_sec <- if(length(pars) == 1) pars else pars[["v_sec"]]
+    if(any(names(pars) == "v_70s"))
+      v_70s <- if(length(pars) == 1) pars else pars[["v_70s"]]
     if(any(names(pars) == "b"))
       b <- if(length(pars) == 1) pars else pars[["b"]]
     if(any(names(pars) == "c"))
@@ -170,6 +179,9 @@ make_transform <- function(pars,m, d, import, N_time, N_age, N_reg,
                                   S_init["age6to9",] * catchup2 +
                                   V1_init["age6to9",] * catchup2)
     
+    V1_init["age31to40",] <- round(S_init["age31to40",] * v_70s)
+    S_init["age31to40",] <- (S_init["age31to40",] - V1_init["age31to40",])
+    
     # Set proportion of recovered in 2010 per age group
     recov <- R_init * 0
     recov["age11to15", ] <- recov11to15
@@ -181,7 +193,8 @@ make_transform <- function(pars,m, d, import, N_time, N_age, N_reg,
     list(beta = beta, X = X, Y = Y, delta = delta, X_import = X_import, Y_import = Y_import,
          b = b, c = c, theta = theta, m = m, d = d, vacc = vacc, 
          mean_import = import / report_import, N_time = N_time, 
-         N_age = N_age, N_reg = N_reg, v_fail = v_fail, v_leak = v_leak, v_sec = v_sec, 
+         N_age = N_age, N_reg = N_reg, v_fail = v_fail, v_leak = v_leak, 
+         v_sec = v_sec, v_70s = v_70s,
          V1_init = V1_init, V2_init = V2_init, Es_init = Es_init, 
          Ev1_init = Ev1_init, Ev2_init = Ev2_init, Is_init = Is_init, 
          Iv1_init = Iv1_init, Iv2_init = Iv2_init, 
@@ -196,9 +209,9 @@ make_transform <- function(pars,m, d, import, N_time, N_age, N_reg,
 }
 
 # Create initial vector of parameters 
-create_init <- function(vacc_yes, vax, distance, waning, sec){
-  name_file <- paste0("Output/", vax, "_", distance, if(sec) "_sec", "/",
-                      waning, ".RDS")
+create_init <- function(vacc_yes, vax, distance, waning, sec, vacc_70s){
+  name_file <- paste0("Output/", vax, "_", distance, if(sec) "_sec", 
+                      if(vacc_70s) "_vacc70s", "/", waning, ".RDS")
   # If the file already exists (i.e. the model has already been run), 
   # import the value from the saved file
   if(any(is.element(dir(recursive = T), name_file))) {
@@ -220,18 +233,21 @@ create_init <- function(vacc_yes, vax, distance, waning, sec){
   if(sec & !any(names(init) == "v_sec")) init["v_sec"] <- 0
   if(!sec & any(names(init) == "v_sec")) init <- init[-which(names(init) == "v_sec")]
   
+  # If vaccination for individuals born in 1970s is included in the model, add v_70s
+  if(vacc_70s & !any(names(init) == "v_70s")) init["v_70s"] <- 0
+  if(!vacc_70s & any(names(init) == "v_70s")) init <- init[-which(names(init) == "v_70s")]
+  
   # If the spatial kernel is estimated in the model, add b, c and theta 
   if(distance == "fixed" & any(names(init) %in% c("b", "c", "theta"))) 
     init <- init[-which(names(init) %in% c("b", "c", "theta"))]
-  
   
   return(init)
 }
 
 # Create covariance proposal matrix
-create_proposal <- function(vacc_yes, vax, distance, waning, init, pars, sec){
-  name_file <- paste0("Output/", vax, "_", distance, if(sec) "_sec", "/",
-                      waning, ".RDS")
+create_proposal <- function(vacc_yes, vax, distance, waning, init, pars, sec, vacc_70s){
+  name_file <- paste0("Output/", vax, "_", distance, if(sec) "_sec",
+                      if(vacc_70s) "_vacc70s", "/", waning, ".RDS")
   
   # If the file already exists (i.e. the model has already been run), 
   # import the value from the saved file
@@ -265,6 +281,17 @@ create_proposal <- function(vacc_yes, vax, distance, waning, init, pars, sec){
   if(!sec & any(colnames(proposal_matrix) == "v_sec")){
     index_sec <- which(rownames(proposal_matrix) == "v_sec")
     proposal_matrix <- proposal_matrix[-index_sec, -index_sec]
+  }
+  
+  # If vaccination for individuals born in the 1970s is included in the model, add v_70s
+  if(vacc_70s & !any(colnames(proposal_matrix) == "v_70s")){
+    proposal_matrix <- cbind(proposal_matrix, v_70s = 0)
+    proposal_matrix <- rbind(proposal_matrix, v_70s = 0)
+    proposal_matrix["v_70s", "v_70s"] <- 1e-5
+  }
+  if(!vacc_70s & any(colnames(proposal_matrix) == "v_70s")){
+    index_v70s <- which(rownames(proposal_matrix) == "v_70s")
+    proposal_matrix <- proposal_matrix[-index_v70s, -index_v70s]
   }
   
   # If the spatial kernel is estimated in the model, add b, c and theta 

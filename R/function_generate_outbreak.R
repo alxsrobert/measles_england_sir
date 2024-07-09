@@ -60,6 +60,8 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   if(any(names(sample) == "v_leak")) v_leak <- sample["v_leak"]
   # Secondary vaccine failure (constant)
   if(any(names(sample) == "v_sec")) v_sec <- sample["v_sec"]
+  # Vaccine coverage in individuals born in the 1970s
+  if(any(names(sample) == "v_70s")) v_70s <- sample["v_70s"]
   # Against onwards infection
   vacc <- sample["vacc"]
   
@@ -83,9 +85,10 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   ## Extract parameters from the "sample" vector
   catchup <- if(any(names(sample) == "catchup")) sample["catchup"] else 0
   catchup2 <- if(any(names(sample) == "catchup2")) sample["catchup2"] else 0
+  v_70s <- if(any(names(sample) == "v_70s")) sample["v_70s"] else 0
   recov11to15 <- sample["recov11to15"]
   recov16to20 <- sample["recov16to20"]
-  recov21to30 <- sample["recov21to30"]   
+  recov21to30 <- sample["recov21to30"]
   recov31to40 <- sample["recov31to40"]   
   recov40plus <- sample["recov40plus"]
   
@@ -113,6 +116,9 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
   S <- data$S
   R <- data$R
   
+  # Compute number of adults aged 31-40 in 2010 who got vaccinated 
+  data$V1["age31to40",] <- round(data$S["age31to40",] * v_70s)
+  data$S["age31to40",] <- (data$S["age31to40",] - data$V1["age31to40",])
   
   # Compute the number of importations per region 
   import_per_reg <- data$mean_import_per_reg
@@ -126,6 +132,7 @@ generate_outbreaks_1sample <- function(sample, model, data, states,
     Y_import = Y_import, v_fail = v_fail, vacc = vacc,
     v_leak = if(exists("v_leak")) v_leak else 0, 
     v_sec = if(exists("v_sec")) v_sec else 0, 
+    v_70s = if(exists("v_70s")) v_70s else 0, 
     mean_import = mean_import, 
     N_time = N_time, N_age = data$N_age, N_reg = data$N_reg, V1_init = data$V1, 
     V2_init = data$V2, 

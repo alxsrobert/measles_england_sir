@@ -1,5 +1,5 @@
 ## Run odin.dust model
-run_model <- function(list_model, vax, n_steps, waning, sec, distance){
+run_model <- function(list_model, vax, n_steps, waning, sec, distance, vacc_70s){
   # Import all specs
   list_specs_run <- specs_run()
   
@@ -13,7 +13,7 @@ run_model <- function(list_model, vax, n_steps, waning, sec, distance){
   mcmc_pars <- create_mcmc_pars(
     vacc_yes = list_specs_run$vacc_yes, year_start = list_specs_run$year_start, 
     N_time = list_specs_run$N_time, vax = vax, waning = waning, 
-    distance = distance, sec = sec, list_data = all_data)
+    distance = distance, sec = sec, vacc_70s = vacc_70s, list_data = all_data)
   
   ## Run model
   set.seed(1)
