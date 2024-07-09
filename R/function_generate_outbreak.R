@@ -2,7 +2,7 @@
 generate_outbreaks <- function(pmcmc_run, list_specs_run, vax, n_part, n_samples, 
                                waning, burnin, nowane = FALSE, aggreg = "year"){
   samples <- pmcmc_run$pars[-c(1:burnin),]
-  samples <- (samples[seq(1, nrow(samples), nrow(samples)/n_samples),] %>% unique)
+  samples <- (samples[seq(1, nrow(samples), nrow(samples)/n_samples),])
   if(nowane) samples[, "v_leak"] <- 0
   
   ## Import odin.dust model
