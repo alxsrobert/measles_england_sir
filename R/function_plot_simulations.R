@@ -11,8 +11,8 @@ plot_figure_vax_distrib <- function(list_output, data_anoun, age, regions){
                         5,6,7), 
                       nrow = 3, ncol = 3, byrow = T))
   plot_first_sec(list_output, data_anoun, age, regions)
-  title(ylab = "Number of\n double-vaccinated cases", line = 2.2)#, outer = T, line = 0)
-  title(xlab = "Number of single-vaccinated cases", line = 2)#, outer = T, line = 0)
+  title(ylab = "Number of\n two-dose recipients", line = 2.2)#, outer = T, line = 0)
+  title(xlab = "Number of one-dose recipients", line = 2)#, outer = T, line = 0)
   title(main = "A", adj = 0)
   
   ### Number and proportion of single and double vaccinated cases per age group 
@@ -75,13 +75,13 @@ plot_figure_vax_year <- function(list_output, data_anoun){
   plot_year(output = list_output, data_anoun, prop = "IV1", legend = T, 
             ymax = 17)
   title(main = "A", adj = 0)
-  title(ylab = "% of single-vaccinated cases", outer = F, line = 2.5, cex.lab = 1)
+  title(ylab = "Percentage of one-dose recipients", outer = F, line = 2.5, cex.lab = 1)
   # Plot proportion of double vaccinated cases each year
   plot_year(output = list_output, data_anoun, prop = "IV2", legend = F, 
             ymax = 10)
   title(main = "B", adj = 0)
-  title(ylab = "% of double-vaccinated cases", outer = F, line = 2.5, cex.lab = 1)
-  title(xlab = "year", outer = T, line = 1, cex.lab = 1)
+  title(ylab = "Percentage of two-dose recipients", outer = F, line = 2.5, cex.lab = 1)
+  title(xlab = "Time (year)", outer = T, line = 1, cex.lab = 1)
   
 }
 
@@ -90,7 +90,7 @@ plot_figure_nowane <- function(list_output, data_anoun){
   par(mfrow = c(1, 1), mar = c(2, 4, 1, 0), oma = c(3,1,0,1), bty = "l")
   plot_year(output = list_output_nowane, data_anoun, with_data = FALSE)
   title(ylab = "Number of cases", outer = F, line = 2.5, cex.lab = 1)
-  title(xlab = "year", outer = T, line = 1, cex.lab = 1)
+  title(xlab = "Time (year)", outer = T, line = 1, cex.lab = 1)
 }
 
 # Plot supplement: Distribution of cases by year, region and age group (all cases)
@@ -132,7 +132,7 @@ plot_figure_region_age <- function(list_output, data_anoun, age, regions){
 
 # Plot supplement: Parameter estimates in the model
 plot_figure_parameters <- function(list_pmcmc_run, specs, burnin, thin, vax, sec, 
-                                   distance){
+                                   distance, vacc_70s, main = F){
   ## Import list containing all data
   all_data <- import_all_data(
     year_start = list_specs_run$year_start, N_year = list_specs_run$N_year,
@@ -170,76 +170,108 @@ plot_figure_parameters <- function(list_pmcmc_run, specs, burnin, thin, vax, sec
   
   ## Plot proportion of recovered at t=0 per age group
   n_recov <- sum(grepl("recov", colnames(list_quant[[1]])))
-  if (!sec){
-    mat_lay <- matrix(c(1, 1, 1, 2, 2, 2,
-                        3, 3, 4, 4, 5, 5,
-                        6, 6, 7, 7, 8, 8), 
-                      nrow = 3, ncol = 6, byrow = T)
+  if(main == T){
+    par(mfrow = c(2,2), mar = c(3, 5, 1, 0), oma = c(1,1,0,1), bty = "l")
   } else {
-    mat_lay <- matrix(c(1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 
-                        3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
-                        6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9), 
-                      nrow = 3, ncol = 12, byrow = T)
+    if (!sec & !vacc_70s){
+      mat_lay <- matrix(c(1, 1, 1, 2, 2, 2,
+                          3, 3, 4, 4, 5, 5,
+                          6, 6, 7, 7, 8, 8), 
+                        nrow = 3, ncol = 6, byrow = T)
+    } else {
+      mat_lay <- matrix(c(1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 
+                          3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+                          6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9), 
+                        nrow = 3, ncol = 12, byrow = T)
+    }
+    
+    par(mfrow = c(1,1), mar = c(3, 5, 1, 0), oma = c(1,1,0,1), bty = "l")
+    layout(mat = mat_lay)
+  }  
+  if(!main){
+    plot_column_sample(list_quant = list_quant, name = "recov", legend = T, col = col)
+    axis(side = 1, at = seq_len(n_recov), las = 1,
+         labels = c("[10-15)", "[15-20)", "[20-30)", "[30-40)", "[40-100]")
+    )
+    title(ylab = "Proportion of susceptible\n individuals recovered in 2010", outer = F, line = 3)
+    title(xlab = "Age group", outer = F, line = 2)
+    title(main = "A", adj = 0.05)
+    ## Plot proportion of unvaccinated vaccinated during catchup campaigns
+    plot_column_sample(list_quant, "catchup", ymax = 1, col = col)
+    axis(side = 1, at = c(1,2), las = 1, labels = c("1996 (20-30 yo)", "2008 (6-10yo)"))
+    title(ylab = "Proportion of unvaccinated\n individuals vaccinated in \ncatch-up campaigns", 
+          outer = F, line = 2.2)
+    title(xlab = "Catchup campaign and target age group", outer = F, line = 2)
+    title(main = "B", adj = 0.05)
   }
   
-  par(mfrow = c(1,1), mar = c(3, 5, 1, 0), oma = c(1,1,0,1), bty = "l")
-  layout(mat = mat_lay)
-  
-  plot_column_sample(list_quant = list_quant, name = "recov", legend = T, col = col)
-  axis(side = 1, at = seq_len(n_recov), las = 1,
-       labels = c("[10-15)", "[15-20)", "[20-30)", "[30-40)", "[40-100]")
-  )
-  title(ylab = "Proportion of susceptible\n individuals recovered in 2010", outer = F, line = 3)
-  title(xlab = "Age group", outer = F, line = 2)
-  title(main = "A", adj = 0.05)
-  
-  
-  
-  ## Plot proportion of unvaccinated vaccinated during catchup campaigns
-  plot_column_sample(list_quant, "catchup", ymax = 1, col = col)
-  axis(side = 1, at = c(1,2), las = 1, labels = c("1996 (20-30 yo)", "2008 (6-10yo)"))
-  title(ylab = "Proportion of unvaccinated\n individuals vaccinated in \ncatch-up campaigns", 
-        outer = F, line = 2.2)
-  title(xlab = "Catchup campaign and target age group", outer = F, line = 2)
-  title(main = "B", adj = 0.05)
-  
-  ## Plot R0
-  plot_column_sample(list_quant, "r0", ymin = if(vax == "cprd") 15 else 9, 
-                     ymax = if(vax == "cprd") 18 else 12, col = col)
-  title(ylab = "R0", outer = F, line = 3)
-  title(main = "C", adj = 0.05)
-  
-  ## Plot delta
-  plot_column_sample(list_quant, "delta", ymin = if(vax == "cprd") 170 else 90,
-                     ymax = if(vax == "cprd") 185 else 120, col = col)
-  title(ylab = "Maternal immunity (days)", outer = F, line = 3)
-  title(main = "D", adj = 0.05)
-  
-  ## Plot report_import
-  plot_column_sample(list_quant, "report_import", ymin = 0.45, ymax = 0.65, col = col)
-  title(ylab = "Proportion of imports reported", outer = F, line = 3)
-  title(main = "E", adj = 0.05)
-  
-  
-  ## Plot vax
-  plot_column_sample(list_quant, "v_fail", ymax = .07, col = col)
-  title(ylab = "Primary vaccine failure", outer = F, line = 3)
-  title(main = "F", adj = 0.05)
-  plot_column_sample(list_quant, "v_protect", ymax = 1, col = col)
-  title(ylab = "Risk of onward transmission \nfrom vaccinated cases", outer = F, line = 3)
-  title(main = "G", adj = 0.05)
-  plot_column_sample(list_quant, "v_leak", ymax = .08, col = col)
-  title(ylab = "Waning of protection \n(% per year)", outer = F, line = 3)
-  title(main = "H", adj = 0.05)
-  
-  
-  if(sec){
-    plot_column_sample(list_quant, "v_sec", ymax = .01)
-    title(ylab = "Baseline risk of\n secondary vaccine failure", 
-          outer = F, line = 3)
-    title(main = "I", adj = 0.05)
+  if(main){
+    ## Plot R0
+    plot_column_sample(list_quant, "r0", ymin = if(vax == "cprd") 16 else 9, 
+                       ymax = if(vax == "cprd") 19 else 12, col = col, legend = T)
+    title(ylab = "R0", outer = F, line = 3)
+    title(main = "A", adj = 0.05)
+    
+    plot_column_sample(list_quant, "v_protect", ymax = 1, col = col)
+    title(ylab = "Risk of onward transmission \nfrom vaccinated cases", outer = F, line = 3)
+    title(main = "B", adj = 0.05)
+    
+    ## Plot vax
+    plot_column_sample(list_quant, "v_fail", ymax = 4, col = col)
+    title(ylab = "Primary vaccine failure (%)", outer = F, line = 3)
+    title(main = "C", adj = 0.05)
+    
+    plot_column_sample(list_quant, "v_leak", ymax = .06, col = col)
+    title(ylab = "Waning of protection \n(% point per year of age)", outer = F, line = 3)
+    title(main = "D", adj = 0.05)
+    
+  } else {
+    ## Plot R0
+    plot_column_sample(list_quant, "r0", ymin = if(vax == "cprd") 15 else 9, 
+                       ymax = if(vax == "cprd") 18 else 12, col = col)
+    title(ylab = "R0", outer = F, line = 3)
+    title(main = "C", adj = 0.05)
   }
   
+  
+  if(!main){
+    ## Plot delta
+    plot_column_sample(list_quant, "delta", ymin = if(vax == "cprd") 170 else 90,
+                       ymax = if(vax == "cprd") 185 else 120, col = col)
+    title(ylab = "Maternal immunity (days)", outer = F, line = 3)
+    title(main = "D", adj = 0.05)
+    
+    ## Plot report_import
+    plot_column_sample(list_quant, "report_import", ymin = 0.45, ymax = 0.65, col = col)
+    title(ylab = "Proportion of imports reported", outer = F, line = 3)
+    title(main = "E", adj = 0.05)
+    
+    plot_column_sample(list_quant, "v_protect", ymax = 1, col = col)
+    title(ylab = "Risk of onward transmission \nfrom vaccinated cases", outer = F, line = 3)
+    title(main = "F", adj = 0.05)
+    
+    ## Plot vax
+    plot_column_sample(list_quant, "v_fail", ymax = 7, col = col)
+    title(ylab = "Primary vaccine failure (%)", outer = F, line = 3)
+    title(main = "G", adj = 0.05)
+    
+    plot_column_sample(list_quant, "v_leak", ymax = .08, col = col)
+    title(ylab = "Waning of protection \n(% point per year of age)", outer = F, line = 3)
+    title(main = "H", adj = 0.05)
+    
+    if(sec){
+      plot_column_sample(list_quant, "v_sec", ymax = 1)
+      title(ylab = "Baseline risk of\n secondary vaccine failure (%)", 
+            outer = F, line = 3)
+      title(main = "I", adj = 0.05)
+    }
+    if(vacc_70s){
+      plot_column_sample(list_quant, "v_70s", ymax = 1)
+      title(ylab = "Proportion of one-dose recipients among \nindividuals aged 30-40 in 2010", 
+            outer = F, line = 3)
+      title(main = "I", adj = 0.05)
+    }
+  }
 }
 
 # Plot supplement: Plot importation and transmission seasonality
@@ -263,8 +295,8 @@ plot_figure_season <- function(list_pmcmc_run){
   plot_seasonality(list_samples, import = T)
   title(main = "B", adj = 0.05)
   abline(h = 100, lty = 2)
-  title(ylab = "Percentage of reference level", outer = T, line = -2)
-  title(xlab = "Time (Days)", outer = T, line = -1)
+  title(ylab = "Percentage of reference level", outer = T, line = -1.5)
+  title(xlab = "Time (Days)", outer = T, line = 1)
 }
 
 # Plot supplement: Plot posterior distribution
@@ -282,14 +314,15 @@ plot_posterior <- function(list_pmcmc_run, burnin, thin,
   par(mfrow = c(1, 1), mar = c(2, 4, 1, 0), oma = c(3,1,0,1), bty = "l")
   list_post[[1]] %>% density %>% 
     plot(main = "Density of posterior distribution per model", 
-         type = "h", xlim = c(-36600, -35950), col = col[1])
+         type = "h", xlim = c(-36400, -35950), col = col[1])
   if(length(list_post) > 1){
     for(i in seq(2, length(list_post))){
       list_post[[i]] %>% density %>% lines(type = "h", col = col[i])
     }
   }
   title(xlab = "Posterior", outer = T, line = 1)
-  legend("center", fill = col, legend = names(list_post), border = NA,
+  # legend("center", fill = col, legend = names(list_post), border = NA,
+  legend("left", fill = col, legend = names(list_post), border = NA,
          bty = "n")
   
 }
@@ -308,6 +341,12 @@ plot_dens_param <- function(list_pmcmc_run, burnin, thin,
       samples_x[, "v_leak"] <- samples_x[, "v_leak"] * 100
     }
     
+    if(!any(colnames(samples_x) == "v_fail")) {
+      samples_x <- cbind(samples_x, v_fail = 0) 
+    } else {
+      samples_x[, "v_fail"] <- samples_x[, "v_fail"] * 100
+    }
+    
     return(samples_x)
   })
   
@@ -324,7 +363,7 @@ plot_dens_param <- function(list_pmcmc_run, burnin, thin,
   df_samples <- pivot_longer(df_samples, !model)
   
   ## Rename some of the parameters to match the paper
-  df_samples[df_samples$name == "vacc",]$name <- "v_onwards"
+  df_samples[df_samples$name == "vacc",]$name <- "v_onward"
   df_samples[df_samples$name == "report_import",]$name <- "p_import"
   
   df_samples[df_samples$name == "delta",]$value <- 
@@ -590,6 +629,7 @@ plot_year <- function(output, data, prop = "tot", legend = T, ymax = 3500, with_
        las = 2)
   if(length(output) > 1 & legend){
     legend("topright", fill = col, legend = names(output), border = NA, bty = "n")
+    if(with_data) legend("topleft", pch = 3, legend = "Data", border = NA, bty = "n")
   }
 }
 
@@ -700,7 +740,7 @@ plot_first_sec <- function(output, data, age, regions, legend = T,
                 by = vaccinated, .SDcols = "N"]$N[2],
            data[, lapply(.SD, function(X) sum(X)), 
                 by = vaccinated, .SDcols = "N"]$N[3],
-           , col = "black", pch = 19, ylab = "", 
+           , col = "black", pch = 3, ylab = "", 
            ylim = c(0, 500), xlim = c(0, 1000), xlab = ""
       )
       
@@ -715,10 +755,12 @@ plot_first_sec <- function(output, data, age, regions, legend = T,
   points(data[, lapply(.SD, function(X) sum(X)), 
               by = vaccinated, .SDcols = "N"]$N[2],
          data[, lapply(.SD, function(X) sum(X)), 
-              by = vaccinated, .SDcols = "N"]$N[3], col = "black", pch = 19
+              by = vaccinated, .SDcols = "N"]$N[3], col = "black", pch = 3, cex = 2
   )
   if(length(output) > 1 & legend){
-    legend("left", fill = col, legend = names(output), border = NA, bty = "n")
+    legend("topleft", fill = col, legend = names(output), 
+           border = NA, bty = "n")
+    legend("left", legend = "Data", pch = 3, border = NA, bty = "n")
   }
   
 }
@@ -737,6 +779,11 @@ plot_column_sample <- function(list_quant, name, col = c("#4575b4", "#d73027", "
     low_j <- seq_len(n_param) - tot_width/2 + (j-1)*(width_one)
     high_j <- low_j + width_one
     mid_j <- (high_j + low_j)/2
+    
+    if(name == "v_fail" | name == "v_sec"){
+      list_quant[[j]][, grep(name, colnames(list_quant[[j]]))] <- 
+        list_quant[[j]][, grep(name, colnames(list_quant[[j]]))] * 100
+    }
     
     # Initialise the plot
     if(j == 1){
