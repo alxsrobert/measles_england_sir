@@ -18,19 +18,20 @@ data_anoun <- import_case_data(
 ## - sensitivity: cover vaccine data
 ## - sensitivity: fixed distance kernel
 input_parameters <- 
-  list(list(vax = "cprd", distance = "degree", sec = FALSE), 
-       list(vax = "cprd", distance = "degree", sec = TRUE), 
-       list(vax = "cover", distance = "degree", sec = FALSE),
-       list(vax = "cprd", distance = "fixed", sec = FALSE))
-
+  list(list(vax = "cprd", distance = "degree", sec = FALSE, vacc_70s = FALSE), 
+       list(vax = "cprd", distance = "degree", sec = TRUE, vacc_70s = FALSE), 
+       list(vax = "cover", distance = "degree", sec = FALSE, vacc_70s = FALSE),
+       list(vax = "cprd", distance = "fixed", sec = FALSE, vacc_70s = FALSE),
+       list(vax = "cprd", distance = "degree", sec = FALSE, vacc_70s = TRUE))
 for(i in seq_along(input_parameters)){
   # Extract vax, distance and sec from the input_parameters list
   vax <- input_parameters[[i]]$vax
   distance <- input_parameters[[i]]$distance
   sec <- input_parameters[[i]]$sec
+  vacc_70s <- input_parameters[[i]]$vacc_70s
   
   ## Repository containing the simulations and parameter fits
-  repos_i <- paste0("Output/", vax, "_", distance, if(sec) "_sec")
+  repos_i <- paste0("Output/", vax, "_", distance, if(sec) "_sec", if(vacc_70s) "_vacc70s")
   
   ## Repository where the figures will be saved
   repos_figures_i <- paste0(repos_i, "/figures/")
@@ -53,12 +54,12 @@ for(i in seq_along(input_parameters)){
   ## Aggregate no waning, waning since vax and waining since eli in a list
   list_output <- list("no waning" = all_output_no, 
     "with waning" = all_output_since_vax,
-    "with waning starting in 1990" = all_output_since_eli
+    "with waning starting in 2000" = all_output_since_eli
   )
   ## Aggregate waining since eli and waning since eli (removed waning) in a list
   list_output_nowane <- list(
-    "waning starting in 1990" = all_output_since_eli,
-    "waning starting in 1990, setting waning to 0" = all_output_since_eli_nowane
+    "waning starting in 2000" = all_output_since_eli,
+    "waning starting in 2000, setting waning to 0" = all_output_since_eli_nowane
   )
   
   ## Import files containing the model fits generated for this scenario and 
@@ -69,7 +70,7 @@ for(i in seq_along(input_parameters)){
   
   list_pmcmc_run <- list("no waning" = pmcmc_run_no, 
                          "with waning" = pmcmc_run_since_vax,
-                         "with waning starting in 1990" = pmcmc_run_since_eli
+                         "with waning starting in 2000" = pmcmc_run_since_eli
   )
   
   ## If "sec" is true, "no waning" contains a constant risk of secondary vaccine failure
@@ -79,7 +80,7 @@ for(i in seq_along(input_parameters)){
   }
   
   ## Figure 3: age distribution of vaccinated cases per simulation set
-  png(paste0(repos_figures_i, "age_vaccinated.png"), width = 500, height = 400)
+  png(paste0(repos_figures_i, "age_vaccinated.png"), width = 600, height = 500)
   plot_figure_vax_distrib(list_output, data_anoun, list_specs_run$age, list_specs_run$regions)
   dev.off()
   
@@ -90,7 +91,9 @@ for(i in seq_along(input_parameters)){
   
   ## Figure 5: values of parameters in models including waning
   png(paste0(repos_figures_i, "parameter_waning_only.png"), width = 500, height = 500)
-  plot_figure_parameters(list_pmcmc_run[c(2,3)], list_specs_run, burnin, thin, vax, sec, distance)
+  plot_figure_parameters(list_pmcmc_run[c(2,3)], list_specs_run, burnin, thin, 
+                         vax, sec, vacc_70s, 
+                         distance, main = T)
   dev.off()  
   
   ### Supplement figures
@@ -99,16 +102,17 @@ for(i in seq_along(input_parameters)){
   plot_figure_region_age(list_output, data_anoun, list_specs_run$age, list_specs_run$regions)
   dev.off() 
   
+  ## Parameter values
+  png(paste0(repos_figures_i, "parameter_all_models.png"), width = 500, height = 600)
+  plot_figure_parameters(list_pmcmc_run, list_specs_run, burnin, thin, vax, sec,
+                         # vacc_70s, 
+                         distance, main = F)
+  dev.off()
   
   ## Impact of removing waning from the since_elimination scenario
   png(paste0(repos_figures_i, "waning_remove.png"), width = 500, height = 600)
   plot_figure_nowane(list_output_nowane, data_anoun)
   dev.off() 
-  
-  ## Parameter values
-  png(paste0(repos_figures_i, "parameter_all_models.png"), width = 500, height = 600)
-  plot_figure_parameters(list_pmcmc_run, list_specs_run, burnin, thin, vax, sec, distance)
-  dev.off()
   
   ## Seasonality
   png(paste0(repos_figures_i, "seasonality.png"), width = 500, height = 400)

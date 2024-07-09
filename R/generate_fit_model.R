@@ -11,10 +11,11 @@ specs_model <- initialise_model(n_steps, anoun = TRUE)
 ## - sensitivity: cover vaccine data
 ## - sensitivity: fixed distance kernel
 input_parameters <- 
-  list(list(vax = "cprd", distance = "degree", sec = FALSE), 
-       list(vax = "cprd", distance = "degree", sec = TRUE), 
-       list(vax = "cover", distance = "degree", sec = FALSE),
-       list(vax = "cprd", distance = "fixed", sec = FALSE))
+  list(list(vax = "cprd", distance = "degree", sec = FALSE, vacc_70s = FALSE), 
+       list(vax = "cprd", distance = "degree", sec = TRUE, vacc_70s = FALSE), 
+       list(vax = "cover", distance = "degree", sec = FALSE, vacc_70s = FALSE),
+       list(vax = "cprd", distance = "fixed", sec = FALSE, vacc_70s = FALSE),
+       list(vax = "cprd", distance = "degree", sec = FALSE, vacc_70s = TRUE))
 
 ## Three waning scenarios
 vec_waning <- c("no", "since_eli", "since_vax")
@@ -24,15 +25,16 @@ for(i in seq_along(input_parameters)){
   vax <- input_parameters[[i]]$vax
   distance <- input_parameters[[i]]$distance
   sec <- input_parameters[[i]]$sec
+  vacc_70s <- input_parameters[[i]]$vacc_70s
   
   for(waning in vec_waning){
     ## Run model
     set.seed(1)
     pmcmc_run <- run_model(
       list_model = specs_model, vax = vax, n_steps = n_steps, 
-      distance = distance, waning = waning, sec = sec)
+      distance = distance, waning = waning, sec = sec, vacc_70s = vacc_70s)
     ## Save output
-    saveRDS(pmcmc_run, paste0("Output/", vax, "_", distance, if(sec) "_sec", "/",
-                              waning, ".RDS"))
+    saveRDS(pmcmc_run, paste0("Output/", vax, "_", distance, if(sec) "_sec", 
+                              if(vacc_70s) "_vacc70s", "/", waning, ".RDS"))
   }
 }
